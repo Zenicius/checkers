@@ -1,11 +1,17 @@
-#include<windows.h>
-#include <GL/glut.h>
+/*
+* DAMAS 
+* VINICIUS REIS
+*/
 
+#include <stdio.h>
+#include <windows.h>
+#include <GL/glut.h>
 
 const char* title = "Damas";
 int width = 1366;
 int height = 728;
 
+bool rotate = false;
 GLfloat rotateAngle = 0.0;
 
 void resize(int w, int h)
@@ -14,9 +20,6 @@ void resize(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45.0, (double)w / (double)h, 1.0, 200);
-	gluLookAt(0.0f, 20.5f, 15.0f,
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f);
 }
 
 void keyboardInput(unsigned char key, int x, int y)
@@ -32,143 +35,61 @@ void keyboardInput(unsigned char key, int x, int y)
 	}
 }
 
-void renderBlackArea()
-{
-	glBegin(GL_QUADS);
-	glColor3f(0.05f, 0.05f, 0.05f);
-	glTranslatef(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(1.50f, 0.0f, 0.0f);
-	glVertex3f(1.5f, 0.3f, 0.0f);
-	glVertex3f(0.0f, 0.3f, 0.0f);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glColor3f(0.05f, 0.05f, 0.05f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, -1.5f);
-	glVertex3f(0.0f, 0.3f, -1.5f);
-	glVertex3f(0.0f, 0.3f, 0.0f);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glColor3f(0.05f, 0.05f, 0.05f);
-	glVertex3f(1.5f, 0.0f, 0.0f);
-	glVertex3f(1.5f, 0.0f, -1.5f);
-	glVertex3f(1.5f, 0.3f, -1.5f);
-	glVertex3f(1.5f, 0.3f, 0.0f);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glColor3f(0.05f, 0.05f, 0.05f);
-	glVertex3f(0.0f, 0.0f, -1.5f);
-	glVertex3f(1.50f, 0.0f, -1.5f);
-	glVertex3f(1.5f, 0.3f, -1.5f);
-	glVertex3f(0.0f, 0.3f, -1.5f);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glColor3f(0.05f, 0.05f, 0.05f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(1.50f, 0.0f, 0.0f);
-	glVertex3f(1.5f, 0.0f, -1.5f);
-	glVertex3f(0.0f, 0.0f, -1.5f);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.3f, 0.0f);
-	glVertex3f(1.50f, 0.3f, 0.0f);
-	glVertex3f(1.5f, 0.3f, -1.5f);
-	glVertex3f(0.0f, 0.3f, -1.5f);
-	glEnd();
-}
-
-void renderWhiteArea()
-{
-	// BOTTOM 
-	glBegin(GL_QUADS);
-	glColor3f(255.0f, 255.0f, 255.0f); // WHITE
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(1.50f, 0.0f, 0.0f);
-	glVertex3f(1.5f, 0.3f, 0.0f);
-	glVertex3f(0.0f, 0.3f, 0.0f);
-	glEnd();
-
-	// LEFT 
-	glBegin(GL_QUADS);
-	glColor3f(255.0f, 255.0f, 255.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, -1.5f);
-	glVertex3f(0.0f, 0.3f, -1.5f);
-	glVertex3f(0.0f, 0.3f, 0.0f);
-	glEnd();
-
-	// RIGHT
-	glBegin(GL_QUADS);
-	glColor3f(255.0f, 255.0f, 255.0f);
-	glVertex3f(1.5f, 0.0f, 0.0f);
-	glVertex3f(1.5f, 0.0f, -1.5f);
-	glVertex3f(1.5f, 0.3f, -1.5f);
-	glVertex3f(1.5f, 0.3f, 0.0f);
-	glEnd();
-
-	// TOP ???
-	glBegin(GL_QUADS);
-	glColor3f(255.0f, 255.0f, 255.0f);
-	glVertex3f(0.0f, 0.0f, -1.5f);
-	glVertex3f(1.50f, 0.0f, -1.5f);
-	glVertex3f(1.5f, 0.3f, -1.5f);
-	glVertex3f(0.0f, 0.3f, -1.5f);
-	glEnd();
-
-	// MIDLE ??
-	glBegin(GL_QUADS);
-	glColor3f(255.0f, 255.0f, 255.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(1.50f, 0.0f, 0.0f);
-	glVertex3f(1.5f, 0.0f, -1.5f);
-	glVertex3f(0.0f, 0.0f, -1.5f);
-	glEnd();
-
-	// ???
-	glBegin(GL_QUADS);
-	glColor3f(255.0f, 255.0f, 255.0f);
-	glVertex3f(0.0f, 0.3f, 0.0f);
-	glVertex3f(1.50f, 0.3f, 0.0f);
-	glVertex3f(1.5f, 0.3f, -1.5f);
-	glVertex3f(0.0f, 0.3f, -1.5f);
-	glEnd();
-}
-
 void renderBoard()
 {
-	float i;
 	int k = 0;
-	for (float j = 0.0; j > (-8 * 1.5); j -= 1.5)
+	
+	// RENDER BLACK AREA
+	for (float j = 0.0; j < 8; j++)
 	{
 		k++;
-		for (i = 0.0; i < (4 * 3.0); i += 3.0)
+		for (float i = 0.0; i < 4; i++)
 		{
 			if (k % 2 == 0)
 			{
 				glPushMatrix();
-				glTranslatef(i, 0.0, j);
-				renderBlackArea();
+				glTranslatef(i * 3, 0.0, j * 1.5);
+				glColor3f(0.0f, 0.0f, 0.0f);
+				glutSolidCube(1.5f);
 				glPopMatrix();
 
 			}
 			else
 			{
 				glPushMatrix();
-				glTranslatef(i + 1.5, 0.0, j);
-				renderBlackArea();
+				glTranslatef((i * 3 + 1.5), 0.0, j * 1.5);
+				glColor3f(0.0f, 0.0f, 0.0f);
+				glutSolidCube(1.5f);
+				glPopMatrix();
+			}
+		}
+	}
+
+	// RENDER WHITE AREA
+	for (float j = 0.0; j < 8; j++)
+	{
+		k++;
+		for (float i = 0.0; i < 4; i++)
+		{
+			if (k % 2 == 0)
+			{
+				glPushMatrix();
+				glTranslatef((i * 3 + 1.5), 0.0, j * 1.5);
+				glColor3f(255.0f, 255.0f, 255.0f);
+				glutSolidCube(1.5f);
+				glPopMatrix();
+			}
+			else
+			{
+				glPushMatrix();
+				glTranslatef((i * 3), 0.0, j * 1.5);
+				glColor3f(255.0f, 255.0f, 255.0f);
+				glutSolidCube(1.5f);
 				glPopMatrix();
 			}
 		}
 	}
 }
-
 
 void init()
 {
@@ -183,6 +104,11 @@ void render()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	gluLookAt(0.0f, 60.0f, 2.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f);
+
+
 	glRotatef(rotateAngle, 1.0f, 0.0f, 0.0f);
 	glTranslatef(-4 * 1.5, 0.0, 4 * 1.5);
 
@@ -193,11 +119,15 @@ void render()
 
 void tick(int value) 
 {
-	rotateAngle += 1.0f;
-	if (rotateAngle > 360)
+	if (rotate)
 	{
-		rotateAngle -= 360;
+		rotateAngle += 1.0f;
+		if (rotateAngle > 360)
+		{
+			rotateAngle -= 360;
+		}
 	}
+	
 	glutPostRedisplay();
 	glutTimerFunc(25, tick, 0);
 }
@@ -222,5 +152,4 @@ int main(int argc, char** argv)
 	glutMainLoop();
 
 	return 0;
-
 }
