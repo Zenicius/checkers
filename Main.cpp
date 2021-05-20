@@ -14,6 +14,13 @@ int height = 728;
 bool rotate = false;
 GLfloat rotateAngle = 0.0;
 
+void init()
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_COLOR_MATERIAL);
+	glClearColor(0.0f, 0.6f, 0.0f, 1.0f);
+}
+
 void resize(int w, int h)
 {
 	glViewport(0, 0, w, h);
@@ -35,6 +42,18 @@ void keyboardInput(unsigned char key, int x, int y)
 	}
 }
 
+void renderText(float x, float y, void* font, const char* string, float red, float green, float blue) 
+{
+	glPushMatrix();
+	glColor3f(red, green, blue);
+	glRasterPos2f(x, y);
+	while (*string)
+	{	
+		glutBitmapCharacter(font, *string++);
+	}
+	glPopMatrix();
+}
+
 void renderBoard()
 {
 	int k = 0;
@@ -49,7 +68,7 @@ void renderBoard()
 			{
 				glPushMatrix();
 				glTranslatef(i * 3, 0.0, j * 1.5);
-				glColor3f(0.0f, 0.0f, 0.0f);
+				glColor3f(0.35f, 0.24f, 0.13f);
 				glutSolidCube(1.5f);
 				glPopMatrix();
 
@@ -58,7 +77,7 @@ void renderBoard()
 			{
 				glPushMatrix();
 				glTranslatef((i * 3 + 1.5), 0.0, j * 1.5);
-				glColor3f(0.0f, 0.0f, 0.0f);
+				glColor3f(0.35f, 0.24f, 0.13f);
 				glutSolidCube(1.5f);
 				glPopMatrix();
 			}
@@ -75,7 +94,7 @@ void renderBoard()
 			{
 				glPushMatrix();
 				glTranslatef((i * 3 + 1.5), 0.0, j * 1.5);
-				glColor3f(255.0f, 255.0f, 255.0f);
+				glColor3f(1.05f, 0.90f, 0.70f);
 				glutSolidCube(1.5f);
 				glPopMatrix();
 			}
@@ -83,7 +102,7 @@ void renderBoard()
 			{
 				glPushMatrix();
 				glTranslatef((i * 3), 0.0, j * 1.5);
-				glColor3f(255.0f, 255.0f, 255.0f);
+				glColor3f(1.05f, 0.90f, 0.70f);
 				glutSolidCube(1.5f);
 				glPopMatrix();
 			}
@@ -91,11 +110,8 @@ void renderBoard()
 	}
 }
 
-void init()
+void renderPieces()
 {
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_COLOR_MATERIAL);
-	glClearColor(0.0f, 0.6f, 0.0f, 1.0f);
 }
 
 void render()
@@ -104,15 +120,17 @@ void render()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt(0.0f, 60.0f, 2.0f,
+	gluLookAt(0.0f, 10.0f, 30.0f,
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f);
 
+	renderText(-22, 10, GLUT_BITMAP_TIMES_ROMAN_24, "TEST", 0, 0, 0);
 
 	glRotatef(rotateAngle, 1.0f, 0.0f, 0.0f);
-	glTranslatef(-4 * 1.5, 0.0, 4 * 1.5);
+	glTranslatef(-5.5, 0.0, 4 * 1.5);
 
 	renderBoard(); 
+	renderPieces();
 
 	glutSwapBuffers();
 }
