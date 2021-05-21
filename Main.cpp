@@ -3,16 +3,29 @@
 * VINICIUS REIS
 */
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <windows.h>
+#include <string.h>
+#include <math.h>
 #include <GL/glut.h>
 
 const char* title = "Damas";
 int width = 1366;
 int height = 728;
 
+bool showDebug = true;
 bool rotate = false;
-GLfloat rotateAngle = 0.0;
+
+int mouseX = 0;
+int lastMouseX = 0;
+int mouseY = 0;
+int lastMouseY = 0;
+
+float cameraValueX = 0.0;
+float cameraValueY = 0.0;
+float zoomValue = 30.0f;
+char lastKeyPressed[30] = "None";
 
 void init()
 {
@@ -36,15 +49,84 @@ void keyboardInput(unsigned char key, int x, int y)
 		case 27:
 			exit(0);
 			break;
+		case 'a':
+			sprintf(lastKeyPressed, "A");
+			break;
+		case 's':
+			sprintf(lastKeyPressed, "S");
+			break;
+		case 'd':
+			sprintf(lastKeyPressed, "D");
+			break;
+		case 'w':
+			sprintf(lastKeyPressed, "W");
+			break;
 		case 'f':
+			sprintf(lastKeyPressed, "F");
 			glutFullScreen();
+			break;
+		case 'h':
+			sprintf(lastKeyPressed, "H");
+			showDebug = !showDebug;
 			break;
 	}
 }
 
+void mouseClickInput(int button, int state, int x, int y)
+{
+	// ZOOM IN
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_UP)
+		{
+			if(zoomValue >= 25) zoomValue -= 5;
+		}
+	}
+	// ZOOM OUT
+	else if (button == GLUT_RIGHT_BUTTON)
+	{
+		if (state == GLUT_UP)
+		{
+			if(zoomValue < 75) zoomValue += 5;
+		}
+	}
+
+	glutPostRedisplay();
+}
+
+void mouseMoveInput(int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	
+	if (mouseX > lastMouseX)
+	{
+		cameraValueX += x;
+	}
+	else cameraValueX -= x;
+	
+	if (mouseY > lastMouseY)
+	{
+		cameraValueY += y;
+	}
+	else cameraValueY -= y;
+
+	lastMouseX = x;
+	lastMouseY = y;
+
+	glutPostRedisplay();
+}
+
 void renderText(float x, float y, void* font, const char* string, float red, float green, float blue) 
 {
+	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0.0, width, 0.0, height);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
 	glColor3f(red, green, blue);
 	glRasterPos2f(x, y);
 	while (*string)
@@ -52,6 +134,10 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 		glutBitmapCharacter(font, *string++);
 	}
 	glPopMatrix();
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 }
 
 void renderBoard()
@@ -114,21 +200,54 @@ void renderPieces()
 {
 }
 
+void renderDebug()
+{
+	// ZOOM VALUE INFO
+	char zoomValueText[30];
+	sprintf(zoomValueText, "Zoom Value: %.lf", zoomValue);
+	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText, 0, 0, 0);
+
+	// MOUSE POS X INFO
+	char mouseXText[30];
+	sprintf(mouseXText, "Mouse Pos X: %d", mouseX);
+	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText, 0, 0, 0);
+
+	// MOUSE POS X INFO
+	char mouseYText[30];
+	sprintf(mouseYText, "Mouse Pos Y: %d", mouseY);
+	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText, 0, 0, 0);
+
+	// LAST KEY PRESSED
+	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed, 0, 0, 0);
+
+	// CAMERA VALUE X INFO
+	char cameraValueXText[30];
+	sprintf(cameraValueXText, "Camera Value X: %.lf", cameraValueX);
+	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueXText, 0, 0, 0);
+
+	// CAMERA VALUE Y INFO
+	char cameraValueYText[30];
+	sprintf(cameraValueYText, "Camera Value Y: %.lf", cameraValueY);
+	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText, 0, 0, 0);
+}
+
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt(0.0f, 10.0f, 30.0f,
+	// CAMERA
+	gluLookAt(cos(cameraValueX / 15000) * zoomValue, 10.0f, sin(cameraValueX / 15000) * zoomValue,
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f);
 
-	renderText(-22, 10, GLUT_BITMAP_TIMES_ROMAN_24, "TEST", 0, 0, 0);
+	// DEBUG INFO
+	if(showDebug) renderDebug();
 
-	glRotatef(rotateAngle, 1.0f, 0.0f, 0.0f);
+	// BOARD
+	glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
 	glTranslatef(-5.5, 0.0, 4 * 1.5);
-
 	renderBoard(); 
 	renderPieces();
 
@@ -137,15 +256,6 @@ void render()
 
 void tick(int value) 
 {
-	if (rotate)
-	{
-		rotateAngle += 1.0f;
-		if (rotateAngle > 360)
-		{
-			rotateAngle -= 360;
-		}
-	}
-	
 	glutPostRedisplay();
 	glutTimerFunc(25, tick, 0);
 }
@@ -165,6 +275,8 @@ int main(int argc, char** argv)
 	glutReshapeFunc(resize); // RESIZE
 
 	glutKeyboardFunc(keyboardInput); // KEYS INPUT
+	glutMouseFunc(mouseClickInput); // CLICKS INPUT
+	glutPassiveMotionFunc(mouseMoveInput); // MOVE INPUT
 	glutTimerFunc(25, tick, 0); // UPDATE
 
 	glutMainLoop();
