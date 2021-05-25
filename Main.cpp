@@ -22,7 +22,8 @@ int lastMouseX = 0;
 int mouseY = 0;
 int lastMouseY = 0;
 
-float cameraValueX = 0.0;
+bool cameraMove = false;
+float cameraValueX = 117939.0f; // CENTER 
 float cameraValueY = 0.0;
 float zoomValue = 30.0f;
 char lastKeyPressed[30] = "None";
@@ -74,21 +75,34 @@ void keyboardInput(unsigned char key, int x, int y)
 
 void mouseClickInput(int button, int state, int x, int y)
 {
-	// ZOOM IN
+	// ZOOM ALTER
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
+	{
+		if (zoomValue < 75)
+		{
+			zoomValue += 5;
+		}
+		else zoomValue = 25.0f;
+	}
+
+	// CAMERA MOVEMENT
 	if (button == GLUT_LEFT_BUTTON)
 	{
-		if (state == GLUT_UP)
+		if (state == GLUT_DOWN)
 		{
-			if(zoomValue >= 25) zoomValue -= 5;
+			cameraMove = true;
+		}
+		else if (state == GLUT_UP)
+		{
+			cameraMove = false;
 		}
 	}
-	// ZOOM OUT
-	else if (button == GLUT_RIGHT_BUTTON)
+
+	// RESET
+	if (button == GLUT_MIDDLE_BUTTON)
 	{
-		if (state == GLUT_UP)
-		{
-			if(zoomValue < 75) zoomValue += 5;
-		}
+		zoomValue = 30.0f;
+		cameraValueX = 117939.0f;
 	}
 
 	glutPostRedisplay();
@@ -99,12 +113,17 @@ void mouseMoveInput(int x, int y)
 	mouseX = x;
 	mouseY = y;
 	
-	if (mouseX > lastMouseX)
+	// MOUSE X VAR
+	if (mouseX > lastMouseX && cameraMove)
 	{
 		cameraValueX += x;
 	}
-	else cameraValueX -= x;
+	else if (mouseX < lastMouseX && cameraMove)
+	{
+		cameraValueX -= x;
+	}
 	
+	// MOUSE Y VAR
 	if (mouseY > lastMouseY)
 	{
 		cameraValueY += y;
@@ -276,7 +295,7 @@ int main(int argc, char** argv)
 
 	glutKeyboardFunc(keyboardInput); // KEYS INPUT
 	glutMouseFunc(mouseClickInput); // CLICKS INPUT
-	glutPassiveMotionFunc(mouseMoveInput); // MOVE INPUT
+	glutMotionFunc(mouseMoveInput); // MOVE INPUT
 	glutTimerFunc(25, tick, 0); // UPDATE
 
 	glutMainLoop();
