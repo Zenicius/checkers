@@ -1,5 +1,5 @@
 /*
-* DAMAS 
+* DAMAS
 * VINICIUS REIS
 */
 
@@ -10,9 +10,23 @@
 #include <math.h>
 #include <GL/glut.h>
 
+#include "Entity.h"
+#include "Board.h"
+#include "Piece.h"
+
+// GAME STATES
+#define MENU_STATE 0;
+#define PLAYING_STATE 1;
+
 const char* title = "Damas";
 int width = 1366;
 int height = 728;
+
+int gameState = MENU_STATE;
+
+Board board;
+Piece piecesBlack[12];
+Piece piecesWhite[12];
 
 bool showDebug = true;
 bool rotate = false;
@@ -35,6 +49,58 @@ void init()
 	glClearColor(0.0f, 0.6f, 0.0f, 1.0f);
 }
 
+void initPieces()
+{
+	// INIT BLACK PIECES
+	int k = 0;
+	int c = 0;
+	for (float j = 0.0; j < 3; j++)
+	{
+		k++;
+		for (float i = 0.0; i < 4; i++)
+		{
+			if (k % 2 == 0)
+			{
+				piecesBlack[c].setColor(0.0f, 0.0f, 0.0f);
+				piecesBlack[c].setPos(i * 3, 1.0f, j * 1.5);
+				piecesBlack[c].setSize(0.5);
+
+			}
+			else
+			{
+				piecesBlack[c].setColor(0.0f, 0.0f, 0.0f);
+				piecesBlack[c].setPos((i * 3 + 1.5), 1.0f, j * 1.5);
+				piecesBlack[c].setSize(0.5);
+			}
+			c++;
+		}
+	}
+
+	// INIT WHITE PIECES
+	c = 0;
+	for (float j = 5.0; j < 8; j++)
+	{
+		k++;
+		for (float i = 0.0; i < 4; i++)
+		{
+			if (k % 2 == 0)
+			{
+				piecesWhite[c].setColor(255.0f, 255.0f, 255.0f);
+				piecesWhite[c].setPos(i * 3, 1.0f, j * 1.5);
+				piecesWhite[c].setSize(0.5);
+
+			}
+			else
+			{
+				piecesWhite[c].setColor(255.0f, 255.0f, 255.0f);
+				piecesWhite[c].setPos((i * 3 + 1.5), 1.0f, j * 1.5);
+				piecesWhite[c].setSize(0.5);
+			}
+			c++;
+		}
+	}
+}
+
 void resize(int w, int h)
 {
 	glViewport(0, 0, w, h);
@@ -45,31 +111,31 @@ void resize(int w, int h)
 
 void keyboardInput(unsigned char key, int x, int y)
 {
-	switch (key) 
+	switch (key)
 	{
-		case 27:
-			exit(0);
-			break;
-		case 'a':
-			sprintf(lastKeyPressed, "A");
-			break;
-		case 's':
-			sprintf(lastKeyPressed, "S");
-			break;
-		case 'd':
-			sprintf(lastKeyPressed, "D");
-			break;
-		case 'w':
-			sprintf(lastKeyPressed, "W");
-			break;
-		case 'f':
-			sprintf(lastKeyPressed, "F");
-			glutFullScreen();
-			break;
-		case 'h':
-			sprintf(lastKeyPressed, "H");
-			showDebug = !showDebug;
-			break;
+	case 27:
+		exit(0);
+		break;
+	case 'a':
+		sprintf(lastKeyPressed, "A");
+		break;
+	case 's':
+		sprintf(lastKeyPressed, "S");
+		break;
+	case 'd':
+		sprintf(lastKeyPressed, "D");
+		break;
+	case 'w':
+		sprintf(lastKeyPressed, "W");
+		break;
+	case 'f':
+		sprintf(lastKeyPressed, "F");
+		glutFullScreen();
+		break;
+	case 'h':
+		sprintf(lastKeyPressed, "H");
+		showDebug = !showDebug;
+		break;
 	}
 }
 
@@ -112,7 +178,7 @@ void mouseMoveInput(int x, int y)
 {
 	mouseX = x;
 	mouseY = y;
-	
+
 	// MOUSE X VAR
 	if (mouseX > lastMouseX && cameraMove)
 	{
@@ -122,7 +188,7 @@ void mouseMoveInput(int x, int y)
 	{
 		cameraValueX -= x;
 	}
-	
+
 	// MOUSE Y VAR
 	if (mouseY > lastMouseY)
 	{
@@ -136,7 +202,7 @@ void mouseMoveInput(int x, int y)
 	glutPostRedisplay();
 }
 
-void renderText(float x, float y, void* font, const char* string, float red, float green, float blue) 
+void renderText(float x, float y, void* font, const char* string, float red, float green, float blue)
 {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -149,7 +215,7 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 	glColor3f(red, green, blue);
 	glRasterPos2f(x, y);
 	while (*string)
-	{	
+	{
 		glutBitmapCharacter(font, *string++);
 	}
 	glPopMatrix();
@@ -157,66 +223,6 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
-}
-
-void renderBoard()
-{
-	int k = 0;
-	
-	// RENDER BLACK AREA
-	for (float j = 0.0; j < 8; j++)
-	{
-		k++;
-		for (float i = 0.0; i < 4; i++)
-		{
-			if (k % 2 == 0)
-			{
-				glPushMatrix();
-				glTranslatef(i * 3, 0.0, j * 1.5);
-				glColor3f(0.35f, 0.24f, 0.13f);
-				glutSolidCube(1.5f);
-				glPopMatrix();
-
-			}
-			else
-			{
-				glPushMatrix();
-				glTranslatef((i * 3 + 1.5), 0.0, j * 1.5);
-				glColor3f(0.35f, 0.24f, 0.13f);
-				glutSolidCube(1.5f);
-				glPopMatrix();
-			}
-		}
-	}
-
-	// RENDER WHITE AREA
-	for (float j = 0.0; j < 8; j++)
-	{
-		k++;
-		for (float i = 0.0; i < 4; i++)
-		{
-			if (k % 2 == 0)
-			{
-				glPushMatrix();
-				glTranslatef((i * 3 + 1.5), 0.0, j * 1.5);
-				glColor3f(1.05f, 0.90f, 0.70f);
-				glutSolidCube(1.5f);
-				glPopMatrix();
-			}
-			else
-			{
-				glPushMatrix();
-				glTranslatef((i * 3), 0.0, j * 1.5);
-				glColor3f(1.05f, 0.90f, 0.70f);
-				glutSolidCube(1.5f);
-				glPopMatrix();
-			}
-		}
-	}
-}
-
-void renderPieces()
-{
 }
 
 void renderDebug()
@@ -262,18 +268,24 @@ void render()
 		0.0f, 1.0f, 0.0f);
 
 	// DEBUG INFO
-	if(showDebug) renderDebug();
+	if (showDebug) renderDebug();
 
 	// BOARD
 	glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
 	glTranslatef(-5.5, 0.0, 4 * 1.5);
-	renderBoard(); 
-	renderPieces();
+	board.render();
+	
+	// PIECES
+	for (int i = 0; i < 12; i++)
+	{
+		piecesBlack[i].render();
+		piecesWhite[i].render();
+	}
 
 	glutSwapBuffers();
 }
 
-void tick(int value) 
+void tick(int value)
 {
 	glutPostRedisplay();
 	glutTimerFunc(25, tick, 0);
@@ -284,11 +296,12 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowPosition(100, 100);
-	glutInitWindowSize(width, height); 
+	glutInitWindowSize(width, height);
 	glutCreateWindow(title);
 	//glutFullScreen(); 
 
 	init();
+	initPieces();
 
 	glutDisplayFunc(render); // RENDER
 	glutReshapeFunc(resize); // RESIZE
