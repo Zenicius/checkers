@@ -11,6 +11,8 @@ Entity::Entity()
 	this->blue = 0.0f;
 
 	this->size = 0.0;
+
+	this->selected = false;
 }
 
 Entity::Entity(float x, float y, float z, float red, float green, float blue, double size)
@@ -24,7 +26,15 @@ Entity::Entity(float x, float y, float z, float red, float green, float blue, do
 	this->blue = blue;
 
 	this->size = size;
+
+	this->selected = false;
 } 
+
+pos Entity::getPos()
+{
+	pos pos = { this->x, this->y, this->z };
+	return pos;
+}
 
 void Entity::setPos(float x, float y, float z)
 {
@@ -45,3 +55,7 @@ void Entity::setSize(double size)
 	this->size = size;
 }
 
+void Entity::toggleSelected()
+{
+	this->selected = !this->selected;
+}

@@ -4,6 +4,9 @@
 Board::Board()
 {
 	initBoard();
+	initPieces();
+	
+	lastPieceIndex = 0;
 }
 
 void Board::initBoard()
@@ -57,6 +60,58 @@ void Board::initBoard()
 	}
 }
 
+void Board::initPieces()
+{
+	// INIT BLACK PIECES
+	int k = 0;
+	int c = 0;
+	for (float j = 0.0; j < 3; j++)
+	{
+		k++;
+		for (float i = 0.0; i < 4; i++)
+		{
+			if (k % 2 == 0)
+			{
+				piecesBlack[c].setColor(0.0f, 0.0f, 0.0f);
+				piecesBlack[c].setPos(i * 3, 1.0f, j * 1.5);
+				piecesBlack[c].setSize(0.5);
+
+			}
+			else
+			{
+				piecesBlack[c].setColor(0.0f, 0.0f, 0.0f);
+				piecesBlack[c].setPos((i * 3 + 1.5), 1.0f, j * 1.5);
+				piecesBlack[c].setSize(0.5);
+			}
+			c++;
+		}
+	}
+
+	// INIT WHITE PIECES
+	c = 0;
+	for (float j = 5.0; j < 8; j++)
+	{
+		k++;
+		for (float i = 0.0; i < 4; i++)
+		{
+			if (k % 2 == 0)
+			{
+				piecesWhite[c].setColor(255.0f, 255.0f, 255.0f);
+				piecesWhite[c].setPos(i * 3, 1.0f, j * 1.5);
+				piecesWhite[c].setSize(0.5);
+
+			}
+			else
+			{
+				piecesWhite[c].setColor(255.0f, 255.0f, 255.0f);
+				piecesWhite[c].setPos((i * 3 + 1.5), 1.0f, j * 1.5);
+				piecesWhite[c].setSize(0.5);
+			}
+			c++;
+		}
+	}
+}
+
 void Board::render()
 {
 	for (int j = 0; j < 8; j++)
@@ -65,5 +120,11 @@ void Board::render()
 		{
 			boardCubes[j][i].render();
 		}
+	}
+
+	for (int i = 0; i < 12; i++)
+	{
+		piecesBlack[i].render();
+		piecesWhite[i].render();
 	}
 }

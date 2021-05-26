@@ -15,8 +15,11 @@
 #include "Piece.h"
 
 // GAME STATES
-#define MENU_STATE 0;
-#define PLAYING_STATE 1;
+#define MENU_STATE 0
+#define PLAYER1_TURN 1
+#define PLAYER2_TURN 2
+#define PLAYER1_WON 11
+#define PLAYER2_WON 12
 
 const char* title = "Damas";
 int width = 1366;
@@ -25,8 +28,7 @@ int height = 728;
 int gameState = MENU_STATE;
 
 Board board;
-Piece piecesBlack[12];
-Piece piecesWhite[12];
+int pieceIndex = -1;
 
 bool showDebug = true;
 bool rotate = false;
@@ -36,11 +38,13 @@ int lastMouseX = 0;
 int mouseY = 0;
 int lastMouseY = 0;
 
+char lastKeyPressed[30] = "None";
+
 bool cameraMove = false;
+float rotateAngle = 0.0f;
 float cameraValueX = 117939.0f; // CENTER 
 float cameraValueY = 0.0;
-float zoomValue = 30.0f;
-char lastKeyPressed[30] = "None";
+float zoomValue = 15.0f;
 
 void init()
 {
@@ -49,65 +53,113 @@ void init()
 	glClearColor(0.0f, 0.6f, 0.0f, 1.0f);
 }
 
-void initPieces()
+void cursorIncrease()
 {
-	// INIT BLACK PIECES
-	int k = 0;
-	int c = 0;
-	for (float j = 0.0; j < 3; j++)
+	if (gameState == PLAYER1_TURN)
 	{
-		k++;
-		for (float i = 0.0; i < 4; i++)
+		if (pieceIndex >= 0)
 		{
-			if (k % 2 == 0)
-			{
-				piecesBlack[c].setColor(0.0f, 0.0f, 0.0f);
-				piecesBlack[c].setPos(i * 3, 1.0f, j * 1.5);
-				piecesBlack[c].setSize(0.5);
+			board.piecesWhite[pieceIndex].toggleSelected();
+		} 
 
-			}
-			else
-			{
-				piecesBlack[c].setColor(0.0f, 0.0f, 0.0f);
-				piecesBlack[c].setPos((i * 3 + 1.5), 1.0f, j * 1.5);
-				piecesBlack[c].setSize(0.5);
-			}
-			c++;
+		if (pieceIndex < 11)
+		{
+			pieceIndex++;
+			board.piecesWhite[pieceIndex].toggleSelected();
+		}
+		else
+		{
+			pieceIndex = 0;
+			board.piecesWhite[pieceIndex].toggleSelected();
 		}
 	}
-
-	// INIT WHITE PIECES
-	c = 0;
-	for (float j = 5.0; j < 8; j++)
+	else if (gameState == PLAYER2_TURN)
 	{
-		k++;
-		for (float i = 0.0; i < 4; i++)
+		if (pieceIndex >= 0)
 		{
-			if (k % 2 == 0)
-			{
-				piecesWhite[c].setColor(255.0f, 255.0f, 255.0f);
-				piecesWhite[c].setPos(i * 3, 1.0f, j * 1.5);
-				piecesWhite[c].setSize(0.5);
+			board.piecesBlack[pieceIndex].toggleSelected();
+		}
 
-			}
-			else
-			{
-				piecesWhite[c].setColor(255.0f, 255.0f, 255.0f);
-				piecesWhite[c].setPos((i * 3 + 1.5), 1.0f, j * 1.5);
-				piecesWhite[c].setSize(0.5);
-			}
-			c++;
+		if (pieceIndex < 11)
+		{
+			pieceIndex++;
+			board.piecesBlack[pieceIndex].toggleSelected();
+		}
+		else
+		{
+			pieceIndex = 0;
+			board.piecesBlack[pieceIndex].toggleSelected();
 		}
 	}
 }
 
-void resize(int w, int h)
+void cursorDecrease()
 {
-	glViewport(0, 0, w, h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45.0, (double)w / (double)h, 1.0, 200);
+	if (gameState == PLAYER1_TURN)
+	{
+		if (pieceIndex >= 0)
+		{
+			board.piecesWhite[pieceIndex].toggleSelected();
+		}
+
+		if (pieceIndex > 0)
+		{
+			pieceIndex--;
+			board.piecesWhite[pieceIndex].toggleSelected();
+		}
+		else
+		{
+			pieceIndex = 11;
+			board.piecesWhite[pieceIndex].toggleSelected();
+		}
+	}
+	else if (gameState == PLAYER2_TURN)
+	{
+		if (pieceIndex >= 0)
+		{
+			board.piecesBlack[pieceIndex].toggleSelected();
+		}
+
+		if (pieceIndex > 0)
+		{
+			pieceIndex--;
+			board.piecesBlack[pieceIndex].toggleSelected();
+		}
+		else
+		{
+			pieceIndex = 11;
+			board.piecesBlack[pieceIndex].toggleSelected();
+		}
+	}
 }
+
+void changePlayerTurn()
+{
+	// CHANGE TO OTHER PLAYER VIEW
+	cameraValueX = 117939.0f;
+	if (rotateAngle == 180.0f) rotateAngle = 0.0f;
+	else rotateAngle = 180.0f;
+
+	if (gameState == PLAYER2_TURN)
+	{
+		board.piecesBlack[pieceIndex].toggleSelected();
+		gameState = PLAYER1_TURN;
+		pieceIndex = 0;
+	}
+	else 
+	{
+		board.piecesWhite[pieceIndex].toggleSelected();
+		gameState = PLAYER2_TURN;
+		pieceIndex = 0;
+	}
+}
+
+void startGame()
+{
+	gameState = PLAYER1_TURN;
+	cursorIncrease();
+}
+
 
 void keyboardInput(unsigned char key, int x, int y)
 {
@@ -116,14 +168,23 @@ void keyboardInput(unsigned char key, int x, int y)
 	case 27:
 		exit(0);
 		break;
+	case 13:
+		if (gameState == MENU_STATE) startGame();
+		else changePlayerTurn();
+		break;
+	case 'r':
+		sprintf(lastKeyPressed, "R");
+		break;
 	case 'a':
 		sprintf(lastKeyPressed, "A");
+		cursorDecrease();
 		break;
 	case 's':
 		sprintf(lastKeyPressed, "S");
 		break;
 	case 'd':
 		sprintf(lastKeyPressed, "D");
+		cursorIncrease();
 		break;
 	case 'w':
 		sprintf(lastKeyPressed, "W");
@@ -144,11 +205,11 @@ void mouseClickInput(int button, int state, int x, int y)
 	// ZOOM ALTER
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
 	{
-		if (zoomValue < 75)
+		if (zoomValue < 70)
 		{
 			zoomValue += 5;
 		}
-		else zoomValue = 25.0f;
+		else zoomValue = 15.0f;
 	}
 
 	// CAMERA MOVEMENT
@@ -167,7 +228,7 @@ void mouseClickInput(int button, int state, int x, int y)
 	// RESET
 	if (button == GLUT_MIDDLE_BUTTON)
 	{
-		zoomValue = 30.0f;
+		zoomValue = 15.0f;
 		cameraValueX = 117939.0f;
 	}
 
@@ -227,10 +288,10 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 
 void renderDebug()
 {
-	// ZOOM VALUE INFO
-	char zoomValueText[30];
-	sprintf(zoomValueText, "Zoom Value: %.lf", zoomValue);
-	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText, 0, 0, 0);
+	// MOUSE POS X INFO
+	char gameStateText[30];
+	sprintf(gameStateText, "GameState: %d", gameState);
+	renderText(0, 180, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText, 0, 0, 0);
 
 	// MOUSE POS X INFO
 	char mouseXText[30];
@@ -254,6 +315,12 @@ void renderDebug()
 	char cameraValueYText[30];
 	sprintf(cameraValueYText, "Camera Value Y: %.lf", cameraValueY);
 	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText, 0, 0, 0);
+
+	// ZOOM VALUE INFO
+	char zoomValueText[30];
+	sprintf(zoomValueText, "Zoom Value: %.lf", zoomValue);
+	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText, 0, 0, 0);
+
 }
 
 void render()
@@ -263,7 +330,7 @@ void render()
 	glLoadIdentity();
 
 	// CAMERA
-	gluLookAt(cos(cameraValueX / 15000) * zoomValue, 10.0f, sin(cameraValueX / 15000) * zoomValue,
+	gluLookAt((cos(cameraValueX / 15000) * zoomValue), 10.0f, (sin(cameraValueX / 15000) * zoomValue),
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f);
 
@@ -271,17 +338,10 @@ void render()
 	if (showDebug) renderDebug();
 
 	// BOARD
-	glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
-	glTranslatef(-5.5, 0.0, 4 * 1.5);
+	glRotatef(rotateAngle, 0.0f, 1.0f, 0.0f);
+	glTranslatef(-5.5, 0.0, -5);
 	board.render();
 	
-	// PIECES
-	for (int i = 0; i < 12; i++)
-	{
-		piecesBlack[i].render();
-		piecesWhite[i].render();
-	}
-
 	glutSwapBuffers();
 }
 
@@ -289,6 +349,16 @@ void tick(int value)
 {
 	glutPostRedisplay();
 	glutTimerFunc(25, tick, 0);
+
+	printf("%d\n", pieceIndex);
+}
+
+void resize(int w, int h)
+{
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0, (double)w / (double)h, 1.0, 200);
 }
 
 int main(int argc, char** argv)
@@ -298,10 +368,8 @@ int main(int argc, char** argv)
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(width, height);
 	glutCreateWindow(title);
-	//glutFullScreen(); 
 
 	init();
-	initPieces();
 
 	glutDisplayFunc(render); // RENDER
 	glutReshapeFunc(resize); // RESIZE
