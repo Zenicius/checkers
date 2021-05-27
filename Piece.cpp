@@ -1,10 +1,5 @@
 #include "Piece.h"
 
-void Piece::movePiece(BoardCube boardCube)
-{
-	setPos(boardCube.getPos().x, 1.0f, boardCube.getPos().z);
-}
-
 void Piece::render()
 {
 	glPushMatrix();

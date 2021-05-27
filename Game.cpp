@@ -24,11 +24,11 @@
 const char* title = "Damas";
 int width = 1366;
 int height = 728;
+bool fullScreen = false;
 
 int gameState = MENU_STATE;
 
 Board board;
-int pieceIndex = -1;
 
 bool showDebug = true;
 bool rotate = false;
@@ -53,84 +53,15 @@ void init()
 	glClearColor(0.0f, 0.6f, 0.0f, 1.0f);
 }
 
-void cursorIncrease()
+/*
+*
+* GAME
+*
+*/
+
+void startGame()
 {
-	if (gameState == PLAYER1_TURN)
-	{
-		if (pieceIndex >= 0)
-		{
-			board.piecesWhite[pieceIndex].toggleSelected();
-		} 
-
-		if (pieceIndex < 11)
-		{
-			pieceIndex++;
-			board.piecesWhite[pieceIndex].toggleSelected();
-		}
-		else
-		{
-			pieceIndex = 0;
-			board.piecesWhite[pieceIndex].toggleSelected();
-		}
-	}
-	else if (gameState == PLAYER2_TURN)
-	{
-		if (pieceIndex >= 0)
-		{
-			board.piecesBlack[pieceIndex].toggleSelected();
-		}
-
-		if (pieceIndex < 11)
-		{
-			pieceIndex++;
-			board.piecesBlack[pieceIndex].toggleSelected();
-		}
-		else
-		{
-			pieceIndex = 0;
-			board.piecesBlack[pieceIndex].toggleSelected();
-		}
-	}
-}
-
-void cursorDecrease()
-{
-	if (gameState == PLAYER1_TURN)
-	{
-		if (pieceIndex >= 0)
-		{
-			board.piecesWhite[pieceIndex].toggleSelected();
-		}
-
-		if (pieceIndex > 0)
-		{
-			pieceIndex--;
-			board.piecesWhite[pieceIndex].toggleSelected();
-		}
-		else
-		{
-			pieceIndex = 11;
-			board.piecesWhite[pieceIndex].toggleSelected();
-		}
-	}
-	else if (gameState == PLAYER2_TURN)
-	{
-		if (pieceIndex >= 0)
-		{
-			board.piecesBlack[pieceIndex].toggleSelected();
-		}
-
-		if (pieceIndex > 0)
-		{
-			pieceIndex--;
-			board.piecesBlack[pieceIndex].toggleSelected();
-		}
-		else
-		{
-			pieceIndex = 11;
-			board.piecesBlack[pieceIndex].toggleSelected();
-		}
-	}
+	gameState = PLAYER1_TURN;
 }
 
 void changePlayerTurn()
@@ -142,126 +73,19 @@ void changePlayerTurn()
 
 	if (gameState == PLAYER2_TURN)
 	{
-		board.piecesBlack[pieceIndex].toggleSelected();
 		gameState = PLAYER1_TURN;
-		pieceIndex = 0;
 	}
 	else 
 	{
-		board.piecesWhite[pieceIndex].toggleSelected();
 		gameState = PLAYER2_TURN;
-		pieceIndex = 0;
 	}
 }
 
-void startGame()
-{
-	gameState = PLAYER1_TURN;
-	cursorIncrease();
-}
-
-
-void keyboardInput(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
-	case 27:
-		exit(0);
-		break;
-	case 13:
-		if (gameState == MENU_STATE) startGame();
-		else changePlayerTurn();
-		break;
-	case 'r':
-		sprintf(lastKeyPressed, "R");
-		break;
-	case 'a':
-		sprintf(lastKeyPressed, "A");
-		cursorDecrease();
-		break;
-	case 's':
-		sprintf(lastKeyPressed, "S");
-		break;
-	case 'd':
-		sprintf(lastKeyPressed, "D");
-		cursorIncrease();
-		break;
-	case 'w':
-		sprintf(lastKeyPressed, "W");
-		break;
-	case 'f':
-		sprintf(lastKeyPressed, "F");
-		glutFullScreen();
-		break;
-	case 'h':
-		sprintf(lastKeyPressed, "H");
-		showDebug = !showDebug;
-		break;
-	}
-}
-
-void mouseClickInput(int button, int state, int x, int y)
-{
-	// ZOOM ALTER
-	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
-	{
-		if (zoomValue < 70)
-		{
-			zoomValue += 5;
-		}
-		else zoomValue = 15.0f;
-	}
-
-	// CAMERA MOVEMENT
-	if (button == GLUT_LEFT_BUTTON)
-	{
-		if (state == GLUT_DOWN)
-		{
-			cameraMove = true;
-		}
-		else if (state == GLUT_UP)
-		{
-			cameraMove = false;
-		}
-	}
-
-	// RESET
-	if (button == GLUT_MIDDLE_BUTTON)
-	{
-		zoomValue = 15.0f;
-		cameraValueX = 117939.0f;
-	}
-
-	glutPostRedisplay();
-}
-
-void mouseMoveInput(int x, int y)
-{
-	mouseX = x;
-	mouseY = y;
-
-	// MOUSE X VAR
-	if (mouseX > lastMouseX && cameraMove)
-	{
-		cameraValueX += x;
-	}
-	else if (mouseX < lastMouseX && cameraMove)
-	{
-		cameraValueX -= x;
-	}
-
-	// MOUSE Y VAR
-	if (mouseY > lastMouseY)
-	{
-		cameraValueY += y;
-	}
-	else cameraValueY -= y;
-
-	lastMouseX = x;
-	lastMouseY = y;
-
-	glutPostRedisplay();
-}
+/*
+*
+* RENDER
+*
+*/
 
 void renderText(float x, float y, void* font, const char* string, float red, float green, float blue)
 {
@@ -345,13 +169,11 @@ void render()
 	glutSwapBuffers();
 }
 
-void tick(int value)
-{
-	glutPostRedisplay();
-	glutTimerFunc(25, tick, 0);
-
-	printf("%d\n", pieceIndex);
-}
+/*
+*
+* SCREEN
+*
+*/
 
 void resize(int w, int h)
 {
@@ -359,6 +181,133 @@ void resize(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45.0, (double)w / (double)h, 1.0, 200);
+}
+
+void toggleFullscreen()
+{
+	if (fullScreen)
+	{
+		glutPositionWindow(100, 100);
+		glutReshapeWindow(width, height);
+		fullScreen = false;
+	}
+	else
+	{
+		glutFullScreen();
+		fullScreen = true;
+	}
+}
+
+/*
+*
+* INPUT
+* 
+*/
+
+void keyboardInput(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	case 27:
+		exit(0);
+		break;
+	case 13:
+		if (gameState == MENU_STATE) startGame();
+		else changePlayerTurn();
+		break;
+	case 'r':
+		sprintf(lastKeyPressed, "R");
+		break;
+	case 'a':
+		sprintf(lastKeyPressed, "A");
+		break;
+	case 's':
+		sprintf(lastKeyPressed, "S");
+		break;
+	case 'd':
+		sprintf(lastKeyPressed, "D");
+		break;
+	case 'w':
+		sprintf(lastKeyPressed, "W");
+		break;
+	case 'f':
+		sprintf(lastKeyPressed, "F");
+		toggleFullscreen();
+		break;
+	case 'h':
+		sprintf(lastKeyPressed, "H");
+		showDebug = !showDebug;
+		break;
+	}
+}
+
+void mouseClickInput(int button, int state, int x, int y)
+{
+	// ZOOM ALTER
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
+	{
+		if (zoomValue < 70)
+		{
+			zoomValue += 5;
+		}
+		else zoomValue = 15.0f;
+	}
+
+	// CAMERA MOVEMENT
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_DOWN)
+		{
+			cameraMove = true;
+		}
+		else if (state == GLUT_UP)
+		{
+			cameraMove = false;
+		}
+	}
+
+	// RESET
+	if (button == GLUT_MIDDLE_BUTTON)
+	{
+		zoomValue = 15.0f;
+		cameraValueX = 117939.0f;
+	}
+
+	glutPostRedisplay();
+}
+
+void mouseMoveInput(int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+
+	// MOUSE X VAR
+	if (mouseX > lastMouseX && cameraMove)
+	{
+		cameraValueX += x;
+	}
+	else if (mouseX < lastMouseX && cameraMove)
+	{
+		cameraValueX -= x;
+	}
+
+	// MOUSE Y VAR
+	if (mouseY > lastMouseY)
+	{
+		cameraValueY += y;
+	}
+	else cameraValueY -= y;
+
+	lastMouseX = x;
+	lastMouseY = y;
+
+	glutPostRedisplay();
+}
+
+void tick(int value)
+{
+	glutPostRedisplay();
+	glutTimerFunc(25, tick, 0);
 }
 
 int main(int argc, char** argv)

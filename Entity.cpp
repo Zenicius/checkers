@@ -30,9 +30,9 @@ Entity::Entity(float x, float y, float z, float red, float green, float blue, do
 	this->selected = false;
 } 
 
-pos Entity::getPos()
+Pos Entity::getPos()
 {
-	pos pos = { this->x, this->y, this->z };
+	Pos pos = { this->x, this->y, this->z };
 	return pos;
 }
 
@@ -41,6 +41,13 @@ void Entity::setPos(float x, float y, float z)
 	this->x = x;
 	this->y = y;
 	this->z = z;
+}
+
+void Entity::setPos(Pos pos)
+{
+	this->x = pos.x;
+	this->y = pos.y;
+	this->z = pos.z;
 }
 
 void Entity::setColor(float red, float green, float blue)

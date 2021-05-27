@@ -1,7 +1,8 @@
 #pragma once
+#include <stdio.h>
 #include <GL/glut.h>
 
-struct pos
+struct Pos
 {
 	float x, y, z;
 };
@@ -18,8 +19,9 @@ class Entity
 		Entity();
 		Entity(float x, float y, float z, float red, float green, float blue, double size);
 
-		pos getPos();
+		Pos getPos();
 		void setPos(float x, float y, float z);
+		void setPos(Pos pos);
 		void setColor(float red, float green, float blue);
 		void setSize(double size);
 		void toggleSelected();
