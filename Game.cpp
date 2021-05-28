@@ -6,8 +6,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <windows.h>
+#include <string>
 #include <string.h>
 #include <math.h>
+#include <tuple>
 #include <GL/glut.h>
 
 #include "Entity.h"
@@ -17,31 +19,40 @@
 // GAME STATES
 #define MENU_STATE 0
 #define PLAYER1_TURN 1
-#define PLAYER2_TURN 2
-#define PLAYER1_WON 11
-#define PLAYER2_WON 12
+#define PLAYER1_MOVE 11
+#define PLAYER1_WON 111
 
+#define PLAYER2_TURN 2
+#define PLAYER2_MOVE 22
+#define PLAYER2_WON 222
+
+// WINDOW
 const char* title = "Damas";
 int width = 1366;
 int height = 728;
 bool fullScreen = false;
 
+// GAME
 int gameState = MENU_STATE;
 
 Board board;
+int pieceIndex = -1;
+int moveIndex = 0;
 
+// DEBUG
 bool showDebug = true;
-bool rotate = false;
+std::string lastKeyPressed = "None";
 
+// INPUT
 int mouseX = 0;
 int lastMouseX = 0;
 int mouseY = 0;
 int lastMouseY = 0;
 
-char lastKeyPressed[30] = "None";
-
+// CAMERA
 bool cameraMove = false;
 float rotateAngle = 0.0f;
+bool rotate = false;
 float cameraValueX = 117939.0f; // CENTER 
 float cameraValueY = 0.0;
 float zoomValue = 15.0f;
@@ -59,11 +70,6 @@ void init()
 *
 */
 
-void startGame()
-{
-	gameState = PLAYER1_TURN;
-}
-
 void changePlayerTurn()
 {
 	// CHANGE TO OTHER PLAYER VIEW
@@ -71,13 +77,105 @@ void changePlayerTurn()
 	if (rotateAngle == 180.0f) rotateAngle = 0.0f;
 	else rotateAngle = 180.0f;
 
-	if (gameState == PLAYER2_TURN)
+	// RESET INDEX
+	moveIndex = 0;
+	pieceIndex = 0;
+
+	// CHANGE GAME STATE
+	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE)
 	{
 		gameState = PLAYER1_TURN;
 	}
-	else 
+	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE)
 	{
+		board.clearAvailableMoves();
 		gameState = PLAYER2_TURN;
+	}
+}
+
+void cursorIncrease()
+{
+	if (gameState == PLAYER1_TURN)  // SELECTING BLACK PIECE 
+	{
+		int countB = board.countBlacks() - 1;
+
+		if (pieceIndex < countB)
+		{
+			pieceIndex++;
+			board.blackCursor(pieceIndex);
+		}
+	}
+	else if (gameState == PLAYER1_MOVE) // MOVING BLACK PIECE
+	{
+		if (moveIndex < board.countAvailableMoves() - 1)
+		{
+			moveIndex++;
+			board.moveCursor(moveIndex);
+		}
+	}
+}
+
+void cursorDecrease()
+{
+	if (gameState == PLAYER1_TURN) // SELECTING BLACK PIECE
+	{
+		if (pieceIndex > 0)
+		{
+			pieceIndex--;
+			board.blackCursor(pieceIndex);
+		}
+	}
+	else if (gameState == PLAYER1_MOVE) // MOVING BLACK PIECE
+	{
+		if (moveIndex > 0)
+		{
+			moveIndex--;
+			board.moveCursor(moveIndex);
+		}
+	}
+}
+
+void select()
+{
+	if (gameState == PLAYER1_TURN) // SELECTING BLACK PIECE
+	{
+		Piece* piece = board.getBlackPiece(pieceIndex);
+		int row = std::get<0>(board.getPieceBoardPos(*piece));
+		int column = std::get<1>(board.getPieceBoardPos(*piece));
+		
+		if (row != -1 && board.getBlackMoves(row, column) > 0)
+		{
+			gameState = PLAYER1_MOVE;
+			board.moveCursor(moveIndex);
+		}
+	}
+	else if (gameState == PLAYER1_MOVE) // MOVE PIECE
+	{
+		Piece* piece = board.getBlackPiece(pieceIndex);
+		BoardCube* destination = board.getAvailableMove(moveIndex);
+
+		board.movePiece(piece, destination);
+
+		changePlayerTurn();
+	}
+
+}
+
+void deselect()
+{
+	if (gameState == PLAYER1_MOVE)
+	{
+		board.clearAvailableMoves();
+		gameState = PLAYER1_TURN;
+	}
+}
+
+void startGame()
+{
+	if (gameState == MENU_STATE)
+	{
+		gameState = PLAYER1_TURN;
+		cursorIncrease();
 	}
 }
 
@@ -113,38 +211,31 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 void renderDebug()
 {
 	// MOUSE POS X INFO
-	char gameStateText[30];
-	sprintf(gameStateText, "GameState: %d", gameState);
-	renderText(0, 180, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText, 0, 0, 0);
+	std::string gameStateText = "GameState: " + std::to_string(gameState);
+	renderText(0, 180, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 0, 0, 0);
 
 	// MOUSE POS X INFO
-	char mouseXText[30];
-	sprintf(mouseXText, "Mouse Pos X: %d", mouseX);
-	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText, 0, 0, 0);
+	std::string mouseXText = "Mouse Pos X: " + std::to_string(mouseX);
+	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText.c_str(), 0, 0, 0);
 
 	// MOUSE POS X INFO
-	char mouseYText[30];
-	sprintf(mouseYText, "Mouse Pos Y: %d", mouseY);
-	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText, 0, 0, 0);
+	std::string mouseYText = "Mouse Pos Y: " + std::to_string(mouseY);
+	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText.c_str(), 0, 0, 0);
 
 	// LAST KEY PRESSED
-	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed, 0, 0, 0);
+	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 0, 0, 0);
 
 	// CAMERA VALUE X INFO
-	char cameraValueXText[30];
-	sprintf(cameraValueXText, "Camera Value X: %.lf", cameraValueX);
-	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueXText, 0, 0, 0);
+	std::string cameraValueText = "Camera Value X: " + std::to_string(cameraValueX);
+	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueText.c_str(), 0, 0, 0);
 
 	// CAMERA VALUE Y INFO
-	char cameraValueYText[30];
-	sprintf(cameraValueYText, "Camera Value Y: %.lf", cameraValueY);
-	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText, 0, 0, 0);
+	std::string cameraValueYText = "Camera Value Y: " + std::to_string(cameraValueY);
+	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText.c_str(), 0, 0, 0);
 
 	// ZOOM VALUE INFO
-	char zoomValueText[30];
-	sprintf(zoomValueText, "Zoom Value: %.lf", zoomValue);
-	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText, 0, 0, 0);
-
+	std::string zoomValueText = "Zoom Value " + std::to_string(zoomValue);
+	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText.c_str(), 0, 0, 0);
 }
 
 void render()
@@ -212,30 +303,31 @@ void keyboardInput(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case 13:
-		if (gameState == MENU_STATE) startGame();
-		else changePlayerTurn();
+		lastKeyPressed = "ENTER";
+		startGame();
 		break;
-	case 'r':
-		sprintf(lastKeyPressed, "R");
+	case 8:
+		lastKeyPressed = "BACKSPACE";
+		deselect();
+		break;
+	case 32:
+		lastKeyPressed = "SPACE";
+		select();
 		break;
 	case 'a':
-		sprintf(lastKeyPressed, "A");
-		break;
-	case 's':
-		sprintf(lastKeyPressed, "S");
+		lastKeyPressed = "A";
+		cursorDecrease();
 		break;
 	case 'd':
-		sprintf(lastKeyPressed, "D");
-		break;
-	case 'w':
-		sprintf(lastKeyPressed, "W");
+		lastKeyPressed = "D";
+		cursorIncrease();
 		break;
 	case 'f':
-		sprintf(lastKeyPressed, "F");
+		lastKeyPressed = "F";
 		toggleFullscreen();
 		break;
 	case 'h':
-		sprintf(lastKeyPressed, "H");
+		lastKeyPressed = "H";
 		showDebug = !showDebug;
 		break;
 	}

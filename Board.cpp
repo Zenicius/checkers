@@ -97,6 +97,46 @@ void Board::initBoard()
 	}
 }
 
+void Board::moveCursor(int index)
+{
+	for (BoardCube* cube : availableMoves)
+	{
+		cube->setColor(0.35f, 0.24f, 0.13f);
+	}
+
+	availableMoves.at(index)->setColor(255.0f, 0.0f, 0.0f);
+}
+
+int Board::countAvailableMoves()
+{
+	return availableMoves.size();
+}
+
+BoardCube* Board::getAvailableMove(int index)
+{
+	return availableMoves.at(index);
+} 
+
+void Board::clearAvailableMoves()
+{
+	for (BoardCube* cube : availableMoves)
+	{
+		cube->setColor(0.35f, 0.24f, 0.13f);
+	}
+	
+	for (Piece& piece : bPieces)
+	{
+		piece.setColor(0.0f, 0.0f, 0.0f);
+	}
+
+	for (Piece& piece : wPieces)
+	{
+		piece.setColor(255.0f, 255.0f, 255.0f);
+	}
+
+	availableMoves.clear();
+}
+
 bool Board::hasBlackPiece(int row, int column)
 {
 	float x = getCube(row, column)->getPos().x;
@@ -112,25 +152,25 @@ bool Board::hasBlackPiece(int row, int column)
 	return false;
 }
 
-bool Board::hasWhitePiece(int row, int column)
+void Board::blackCursor(int index)
 {
-	float x = getCube(row, column)->getPos().x;
-	float z = getCube(row, column)->getPos().z;
-
-	for (Piece& piece : wPieces)
+	for (Piece& piece : bPieces)
 	{
-		if (piece.getPos().x == x && piece.getPos().z == z) {
-			return true;
-		}
+		piece.setColor(0.0f, 0.0f, 0.0f);
 	}
 
-	return false;
+	getBlackPiece(index)->setColor(255.0f, 0.0f, 0.0f);
 }
 
-void Board::getBlackMoves(int row, int column)
+int Board::countBlacks()
+{
+	return bPieces.size();
+}
+
+int Board::getBlackMoves(int row, int column)
 {
 	availableMoves.clear();
-	if (!hasBlackPiece(row, column)) return;
+	if (!hasBlackPiece(row, column)) return 0;
 
 	// CENTER 
 	if (row >= 1 && (column >= 1 && column <= 6))
@@ -161,11 +201,28 @@ void Board::getBlackMoves(int row, int column)
 			availableMoves.push_back(&boardCubes[row - 1][column - 1]); // LEFT
 		}
 	}
+
+	return availableMoves.size();
 }
 
-void Board::movePiece(Piece piece, BoardCube destination)
+bool Board::hasWhitePiece(int row, int column)
 {
-	piece.setPos(destination.getPos().x, 1.0f, destination.getPos().z);
+	float x = getCube(row, column)->getPos().x;
+	float z = getCube(row, column)->getPos().z;
+
+	for (Piece& piece : wPieces)
+	{
+		if (piece.getPos().x == x && piece.getPos().z == z) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void Board::movePiece(Piece* piece, BoardCube* destination)
+{
+	piece->setPos(destination->getPos().x, 1.0f, destination->getPos().z);
 }
 
 BoardCube* Board::getCube(int row, int column)
@@ -183,6 +240,23 @@ Piece* Board::getBlackPiece(int index)
 	return &bPieces.at(index);
 }
 
+std::tuple<int, int> Board::getPieceBoardPos(Piece piece)
+{
+	for (int j = 0; j < 8; j++)
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			if (piece.getPos().x == boardCubes[j][i].getPos().x &&
+				piece.getPos().z == boardCubes[j][i].getPos().z)
+			{
+				return std::make_tuple(j, i);
+			}
+		}
+	}
+
+	return std::make_tuple(-1, -1);
+
+}
 
 void Board::render()
 {
@@ -206,14 +280,5 @@ void Board::render()
 	for (Piece& piece : bPieces)
 	{
 		piece.render();
-	}
-
-
-	if (!availableMoves.empty())
-	{
-		for (BoardCube* cube : availableMoves)
-		{
-			cube->setColor(255.0f, 0.0f, 0.0f);
-		}
 	}
 }
