@@ -95,16 +95,30 @@ void Board::initBoard()
 			}
 		}
 	}
+
+	std::reverse(wPieces.begin(), wPieces.end());
 }
 
-void Board::moveCursor(int index)
+void Board::moveCursor(int gameState, int index)
 {
-	for (BoardCube* cube : availableMoves)
+	if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE)
 	{
-		cube->setColor(0.35f, 0.24f, 0.13f);
-	}
+		for (BoardCube* cube : availableMoves)
+		{
+			cube->setColor(0.35f, 0.24f, 0.13f);
+		}
 
-	availableMoves.at(index)->setColor(255.0f, 0.0f, 0.0f);
+		availableMoves.at(index)->setColor(255.0f, 0.0f, 0.0f);
+	}
+	else if (gameState == PLAYER1_JUMP_MOVE)
+	{
+		for (BoardCube* cube : availableJumps)
+		{
+			cube->setColor(0.35f, 0.24f, 0.13f);
+		}
+
+		availableJumps.at(index)->setColor(0.0f, 255.0f, 0.0f);
+	}
 }
 
 int Board::countAvailableMoves()
@@ -123,6 +137,11 @@ void Board::clearAvailableMoves()
 	{
 		cube->setColor(0.35f, 0.24f, 0.13f);
 	}
+
+	for (BoardCube* cube : availableJumps)
+	{
+		cube->setColor(0.35f, 0.24f, 0.13f);
+	}
 	
 	for (Piece& piece : bPieces)
 	{
@@ -135,6 +154,16 @@ void Board::clearAvailableMoves()
 	}
 
 	availableMoves.clear();
+	availableJumps.clear();
+}
+
+bool Board::isOffBoard(int row, int column)
+{
+	if (row > 7 || column > 7 || row < 0 || column < 0)
+	{
+		return true;
+	}
+	else return false;
 }
 
 bool Board::hasBlackPiece(int row, int column)
@@ -152,57 +181,166 @@ bool Board::hasBlackPiece(int row, int column)
 	return false;
 }
 
-void Board::blackCursor(int index)
+bool Board::isValidBlackJump(int srcRow, int srcColumn, int destRow, int destColumn)
 {
-	for (Piece& piece : bPieces)
+	if (srcColumn > destColumn && hasWhitePiece(destRow, destColumn)) // GOING FOWARD LEFT
 	{
-		piece.setColor(0.0f, 0.0f, 0.0f);
+		if (hasWhitePiece(destRow - 1, destColumn - 1) || hasBlackPiece(destRow - 1, destColumn - 1) || 
+			isOffBoard(destRow - 1, destColumn - 1))
+		{
+			return false;
+		}
+		else return true;
+	}
+	else if (srcColumn < destColumn && hasWhitePiece(destRow, destColumn)) // GOING FOWARD RIGHT
+	{
+		if (hasWhitePiece(destRow - 1, destColumn + 1) || hasBlackPiece(destRow - 1, destColumn + 1) ||
+			isOffBoard(destRow - 1, destColumn + 1))
+		{
+			return false;
+		}
+		else return true;
 	}
 
-	getBlackPiece(index)->setColor(255.0f, 0.0f, 0.0f);
+	return false;
 }
 
-int Board::countBlacks()
+void Board::blackCursor(int gameState, int index)
 {
-	return bPieces.size();
+	if (gameState == PLAYER1_TURN)
+	{
+		for (Piece& piece : bPieces)
+		{
+			piece.setColor(0.0f, 0.0f, 0.0f);
+		}
+
+		getBlackPiece(index)->setColor(255.0f, 0.0f, 0.0f);
+	}
+	else if (gameState == PLAYER1_JUMP)
+	{
+		int pIndex = getBJumpPieceIndex().at(index);
+
+		for (Piece& piece : bPieces)
+		{
+			piece.setColor(0.0f, 0.0f, 0.0f);
+		}
+
+		getBlackPiece(pIndex)->setColor(0.0f, 255.0f, 0.0f);
+	}
+}
+
+int Board::countBlacks(int gameState)
+{
+	if (gameState == PLAYER1_TURN)
+	{
+		return bPieces.size();
+	}
+	else if (gameState == PLAYER1_JUMP)
+	{	
+		int count = 0;
+		for (Piece& piece : bPieces)
+		{
+			if (piece.isJumpPiece())
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	return 0;
 }
 
 int Board::getBlackMoves(int row, int column)
 {
 	availableMoves.clear();
-	if (!hasBlackPiece(row, column)) return 0;
 
-	// CENTER 
-	if (row >= 1 && (column >= 1 && column <= 6))
+	int destRow = row - 1;
+	int destLeftColumn = column - 1;
+	int destRightColumn = column + 1;
+	
+
+	if (!isOffBoard(destRow, destLeftColumn) && 
+		!hasBlackPiece(destRow, destLeftColumn) && !hasWhitePiece(destRow, destLeftColumn)) // GOING LEFT
 	{
-		if (!hasBlackPiece(row - 1, column - 1) && !hasBlackPiece(row - 1, column + 1)) // NO FRINDLY PIECES
-		{
-			availableMoves.push_back(&boardCubes[row - 1][column - 1]); // LEFT
-			availableMoves.push_back(&boardCubes[row - 1][column + 1]); // RIGHT
-		}
-		else if (hasBlackPiece(row - 1, column - 1) && !hasBlackPiece(row - 1, column + 1)) // FRIENDLY PIECE LEFT
-		{
-			availableMoves.push_back(&boardCubes[row - 1][column + 1]); // RIGHT
-		}
-		else if (!hasBlackPiece(row - 1, column - 1) && hasBlackPiece(row - 1, column + 1)) // FRIENDLY PIECE RIGHT
-		{
-			availableMoves.push_back(&boardCubes[row - 1][column - 1]); // LEFT
-		}
+		availableMoves.push_back(&boardCubes[destRow][destLeftColumn]);
 	} 
-	// EXTREMITIES
-	else if (row > 1 && (column == 0 || column == 7)) 
+	if (!isOffBoard(destRow, destRightColumn) && 
+		!hasBlackPiece(destRow, destRightColumn) && !hasWhitePiece(destRow, destRightColumn)) // GOING RIGHT 
 	{
-		if (column == 0 && !hasBlackPiece(row - 1, column + 1)) // LEFT EXTREMITY CLEAR RIGHT
-		{
-			availableMoves.push_back(&boardCubes[row - 1][column + 1]); // RIGHT
-		}
-		else if (column == 7 && !hasBlackPiece(row - 1, column - 1)) // RIGHT EXTREMITY CLEAR RIGHT
-		{
-			availableMoves.push_back(&boardCubes[row - 1][column - 1]); // LEFT
-		}
+		availableMoves.push_back(&boardCubes[destRow][destRightColumn]);
 	}
 
 	return availableMoves.size();
+}
+
+std::vector<int> Board::getBJumpPieceIndex()
+{
+	std::vector<int> indexes;
+	for (int i = 0; i < bPieces.size(); i++)
+	{
+		if (bPieces[i].isJumpPiece())
+		{
+			indexes.push_back(i);
+		}
+	}
+
+	return indexes;
+}
+
+int Board::getBJumpMoves(int row, int column)
+{
+	int destRow = row - 1;
+	int destLeftColumn = column - 1;
+	int destRightColumn = column + 1;
+
+	// FOWARD LEFT
+	if (isValidBlackJump(row, column, destRow, destLeftColumn))
+	{
+		availableJumps.push_back(&boardCubes[destRow - 1][destLeftColumn - 1]);
+	}
+
+	// FOWARD RIGHT
+	if (isValidBlackJump(row, column, destRow, destRightColumn))
+	{
+		availableJumps.push_back(&boardCubes[destRow - 1][destRightColumn + 1]);
+	}
+
+	// BACKWARDS LEFT
+	// BACKWARDS RIGHT
+
+	return availableJumps.size();
+}
+
+int Board::getBJumpPieces()
+{
+	int count = 0;
+	for (Piece& piece : bPieces)
+	{
+		int row = std::get<0>(getPieceBoardPos(piece));
+		int column = std::get<1>(getPieceBoardPos(piece));
+
+		int destRow = row - 1;
+		int destLeftColumn = column - 1;
+		int destRightColumn = column + 1;
+
+		if (isValidBlackJump(row, column, destRow, destLeftColumn)) // FOWARD LEFT
+		{
+			piece.setJumpPiece(true);
+			count++;
+		}
+		else if (isValidBlackJump(row, column, destRow, destRightColumn)) // FOWARD RIGHT
+		{
+			piece.setJumpPiece(true);
+			count++;
+		}
+
+		// BACKWARDS LEFT
+		// BACKWARDS RIGHT
+	}
+
+	return count;
 }
 
 bool Board::hasWhitePiece(int row, int column)
@@ -220,9 +358,51 @@ bool Board::hasWhitePiece(int row, int column)
 	return false;
 }
 
+int Board::countWhites()
+{
+	return wPieces.size();
+}
+
+void Board::whiteCursor(int index)
+{
+	for (Piece& piece : wPieces)
+	{
+		piece.setColor(255.0f, 255.0f, 255.0f);
+	}
+
+	getWhitePiece(index)->setColor(0.0f, 0.0f, 255.0f);
+}
+
+int Board::getWhiteMoves(int row, int column)
+{
+	availableMoves.clear();
+
+	int destRow = row + 1;
+	int destLeftColumn = column + 1;
+	int destRightColumn = column - 1;
+
+	if (!isOffBoard(destRow, destLeftColumn) &&
+		!hasBlackPiece(destRow, destLeftColumn) && !hasWhitePiece(destRow, destLeftColumn)) // GOING LEFT
+	{
+		availableMoves.push_back(&boardCubes[destRow][destLeftColumn]);
+	}
+	if (!isOffBoard(destRow, destRightColumn) && 
+		!hasBlackPiece(destRow, destRightColumn) && !hasWhitePiece(destRow, destRightColumn)) // GOING RIGHT 
+	{
+		availableMoves.push_back(&boardCubes[destRow][destRightColumn]);
+	}
+
+	return availableMoves.size();
+}
+
 void Board::movePiece(Piece* piece, BoardCube* destination)
 {
 	piece->setPos(destination->getPos().x, 1.0f, destination->getPos().z);
+}
+
+void Board::jumpPiece(Piece* piece, BoardCube* destination)
+{
+
 }
 
 BoardCube* Board::getCube(int row, int column)

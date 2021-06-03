@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <tuple>
+#include <vector>
 #include <GL/glut.h>
 
 #include "Entity.h"
@@ -18,13 +19,16 @@
 
 // GAME STATES
 #define MENU_STATE 0
+
 #define PLAYER1_TURN 1
 #define PLAYER1_MOVE 11
-#define PLAYER1_WON 111
+#define PLAYER1_JUMP 111
+#define PLAYER1_JUMP_MOVE 1111
+#define PLAYER1_WON 11111
 
 #define PLAYER2_TURN 2
 #define PLAYER2_MOVE 22
-#define PLAYER2_WON 222
+#define PLAYER2_WON 222 
 
 // WINDOW
 const char* title = "Damas";
@@ -51,10 +55,11 @@ int lastMouseY = 0;
 
 // CAMERA
 bool cameraMove = false;
+bool rotateAnimP1 = false;
+bool rotateAnimP2 = false;
 float rotateAngle = 0.0f;
-bool rotate = false;
 float cameraValueX = 117939.0f; // CENTER 
-float cameraValueY = 0.0;
+float cameraValueY = 0.0f;
 float zoomValue = 15.0f;
 
 void init()
@@ -70,86 +75,126 @@ void init()
 *
 */
 
-void changePlayerTurn()
-{
-	// CHANGE TO OTHER PLAYER VIEW
-	cameraValueX = 117939.0f;
-	if (rotateAngle == 180.0f) rotateAngle = 0.0f;
-	else rotateAngle = 180.0f;
-
-	// RESET INDEX
-	moveIndex = 0;
-	pieceIndex = 0;
-
-	// CHANGE GAME STATE
-	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE)
-	{
-		gameState = PLAYER1_TURN;
-	}
-	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE)
-	{
-		board.clearAvailableMoves();
-		gameState = PLAYER2_TURN;
-	}
-}
-
 void cursorIncrease()
 {
-	if (gameState == PLAYER1_TURN)  // SELECTING BLACK PIECE 
+	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP)  // SELECTING BLACK PIECE 
 	{
-		int countB = board.countBlacks() - 1;
-
-		if (pieceIndex < countB)
+		if (pieceIndex < board.countBlacks(gameState) - 1)
 		{
 			pieceIndex++;
-			board.blackCursor(pieceIndex);
+			board.blackCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER1_MOVE) // MOVING BLACK PIECE
+	else if (gameState == PLAYER2_TURN) // SELECTING WHITE PIECE
+	{
+		if (pieceIndex < board.countWhites() - 1)
+		{
+			pieceIndex++;
+			board.whiteCursor(pieceIndex);
+		}
+	}
+	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) // MOVING PIECE
 	{
 		if (moveIndex < board.countAvailableMoves() - 1)
 		{
 			moveIndex++;
-			board.moveCursor(moveIndex);
+			board.moveCursor(gameState, moveIndex);
 		}
 	}
 }
 
 void cursorDecrease()
 {
-	if (gameState == PLAYER1_TURN) // SELECTING BLACK PIECE
+	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP) // SELECTING BLACK PIECE
 	{
 		if (pieceIndex > 0)
 		{
 			pieceIndex--;
-			board.blackCursor(pieceIndex);
+			board.blackCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER1_MOVE) // MOVING BLACK PIECE
+	else if (gameState == PLAYER2_TURN) // SELECTING WHITE PIECE
+	{
+		if (pieceIndex > 0)
+		{
+			pieceIndex--;
+			board.whiteCursor(pieceIndex);
+		}
+	}
+	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) // MOVING PIECE
 	{
 		if (moveIndex > 0)
 		{
 			moveIndex--;
-			board.moveCursor(moveIndex);
+			board.moveCursor(gameState, moveIndex);
 		}
+	}
+}
+
+void changePlayerTurn()
+{
+	cameraValueX = 117939.0f;
+
+	// RESET INDEX
+	moveIndex = 0;
+	pieceIndex = -1;
+
+	// CHANGE GAME STATE
+	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE)
+	{
+		board.clearAvailableMoves();
+
+		// CHECK JUMPS AVAILABLE
+		if (board.getBJumpPieces() > 0)
+		{
+			gameState = PLAYER1_JUMP;
+			cursorIncrease();
+			rotateAnimP2 = true;
+		}
+		else 
+		{
+			gameState = PLAYER1_TURN;
+			cursorIncrease();
+			rotateAnimP2 = true;
+		}
+	}
+	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE)
+	{
+		board.clearAvailableMoves();
+		gameState = PLAYER2_TURN;
+		rotateAnimP1 = true;
+		cursorIncrease();
 	}
 }
 
 void select()
 {
-	if (gameState == PLAYER1_TURN) // SELECTING BLACK PIECE
+	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP) // SELECTING BLACK PIECE
 	{
-		Piece* piece = board.getBlackPiece(pieceIndex);
+		int index = pieceIndex;
+		if (gameState == PLAYER1_JUMP) index = board.getBJumpPieceIndex().at(pieceIndex);
+		Piece* piece = board.getBlackPiece(index);
 		int row = std::get<0>(board.getPieceBoardPos(*piece));
 		int column = std::get<1>(board.getPieceBoardPos(*piece));
-		
-		if (row != -1 && board.getBlackMoves(row, column) > 0)
+
+		if (gameState == PLAYER1_TURN)
 		{
-			gameState = PLAYER1_MOVE;
-			board.moveCursor(moveIndex);
+			if (row != -1 && board.getBlackMoves(row, column) > 0)
+			{
+				gameState = PLAYER1_MOVE;
+				board.moveCursor(gameState, moveIndex);
+			}
+		}
+		else if (gameState == PLAYER1_JUMP)
+		{
+			if (row != -1 && board.getBJumpMoves(row, column) > 0)
+			{
+				gameState = PLAYER1_JUMP_MOVE;
+				board.moveCursor(gameState, moveIndex);
+			}
 		}
 	}
-	else if (gameState == PLAYER1_MOVE) // MOVE PIECE
+	else if (gameState == PLAYER1_MOVE) // MOVE BLACK PIECE
 	{
 		Piece* piece = board.getBlackPiece(pieceIndex);
 		BoardCube* destination = board.getAvailableMove(moveIndex);
@@ -159,14 +204,45 @@ void select()
 		changePlayerTurn();
 	}
 
+	else if (gameState == PLAYER2_TURN) // SELECTING WHITE PIECE
+	{
+		Piece* piece = board.getWhitePiece(pieceIndex);
+		int row = std::get<0>(board.getPieceBoardPos(*piece));
+		int column = std::get<1>(board.getPieceBoardPos(*piece));
+
+		if (row != -1 && board.getWhiteMoves(row, column) > 0)
+		{
+			gameState = PLAYER2_MOVE;
+			board.moveCursor(gameState, moveIndex);
+		}
+	}
+	else if (gameState == PLAYER2_MOVE) // MOVE WHITE PIECE
+	{
+		Piece* piece = board.getWhitePiece(pieceIndex);
+		BoardCube* destination = board.getAvailableMove(moveIndex);
+		board.movePiece(piece, destination);
+
+		changePlayerTurn();
+	}
 }
 
 void deselect()
 {
-	if (gameState == PLAYER1_MOVE)
+	if (gameState == PLAYER1_MOVE || gameState == PLAYER1_JUMP_MOVE)
 	{
+		moveIndex = 0;
 		board.clearAvailableMoves();
-		gameState = PLAYER1_TURN;
+
+		if (gameState == PLAYER1_MOVE) gameState = PLAYER1_TURN;
+		else if (gameState == PLAYER1_JUMP_MOVE) gameState = PLAYER1_JUMP;
+
+		board.blackCursor(gameState, pieceIndex);
+	}
+	else if (gameState == PLAYER2_MOVE)
+	{
+		moveIndex = 0;
+		board.clearAvailableMoves();
+		gameState = PLAYER2_TURN;
 	}
 }
 
@@ -212,7 +288,15 @@ void renderDebug()
 {
 	// MOUSE POS X INFO
 	std::string gameStateText = "GameState: " + std::to_string(gameState);
-	renderText(0, 180, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 0, 0, 0);
+	renderText(600, 700, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 0, 0, 0);
+
+	// LAST KEY PRESSED
+	renderText(1150, 15, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 0, 0, 0);
+
+	// MANDATORY JUMP
+	std::string mandatoryText = "Mandatory Jump";
+	if (gameState == PLAYER1_JUMP || gameState == PLAYER1_JUMP_MOVE
+		) renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 0, 0, 0);
 
 	// MOUSE POS X INFO
 	std::string mouseXText = "Mouse Pos X: " + std::to_string(mouseX);
@@ -222,8 +306,9 @@ void renderDebug()
 	std::string mouseYText = "Mouse Pos Y: " + std::to_string(mouseY);
 	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText.c_str(), 0, 0, 0);
 
-	// LAST KEY PRESSED
-	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 0, 0, 0);
+	// ROTATE ANGLE
+	std::string rotateAngleText = "Rotate: " + std::to_string(rotateAngle);
+	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, rotateAngleText.c_str(), 0, 0, 0);
 
 	// CAMERA VALUE X INFO
 	std::string cameraValueText = "Camera Value X: " + std::to_string(cameraValueX);
@@ -399,7 +484,19 @@ void mouseMoveInput(int x, int y)
 void tick(int value)
 {
 	glutPostRedisplay();
-	glutTimerFunc(25, tick, 0);
+	glutTimerFunc(1, tick, 0);
+
+	// ROTATE ANIM
+	if (rotateAnimP1)
+	{
+		rotateAngle += 4.0f;
+		if (rotateAngle == 180.0f) rotateAnimP1 = false;
+	}
+	else if (rotateAnimP2)
+	{
+		rotateAngle -= 4.0f;
+		if (rotateAngle == 0.0f) rotateAnimP2 = false;
+	}
 }
 
 int main(int argc, char** argv)
@@ -418,7 +515,7 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(keyboardInput); // KEYS INPUT
 	glutMouseFunc(mouseClickInput); // CLICKS INPUT
 	glutMotionFunc(mouseMoveInput); // MOVE INPUT
-	glutTimerFunc(25, tick, 0); // UPDATE
+	glutTimerFunc(1, tick, 0); // UPDATE
 
 	glutMainLoop();
 

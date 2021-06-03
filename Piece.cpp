@@ -1,15 +1,20 @@
 #include "Piece.h"
 
+void Piece::setJumpPiece(bool option)
+{
+	this->jump = option;
+}
+
+bool Piece::isJumpPiece()
+{
+	return this->jump;
+}
+
 void Piece::render()
 {
 	glPushMatrix();
 	glTranslatef(x, y, z);
-	if (selected) 
-	{
-		glColor3f(255.0f, 0.0f, 0.0f);
-	}
-	else glColor3f(red, green, blue);
+	glColor3f(red, green, blue);
 	glutSolidSphere(size, 64, 64);
 	glPopMatrix();
 }
-

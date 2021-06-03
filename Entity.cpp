@@ -12,7 +12,7 @@ Entity::Entity()
 
 	this->size = 0.0;
 
-	this->selected = false;
+	this->jump = false;
 }
 
 Entity::Entity(float x, float y, float z, float red, float green, float blue, double size)
@@ -27,13 +27,19 @@ Entity::Entity(float x, float y, float z, float red, float green, float blue, do
 
 	this->size = size;
 
-	this->selected = false;
+	this->jump = false;
 } 
 
 Pos Entity::getPos()
 {
 	Pos pos = { this->x, this->y, this->z };
 	return pos;
+}
+
+Color Entity::getColor()
+{
+	Color color{ this->red, this->green, this->blue };
+	return color;
 }
 
 void Entity::setPos(float x, float y, float z)
@@ -60,9 +66,4 @@ void Entity::setColor(float red, float green, float blue)
 void Entity::setSize(double size)
 {
 	this->size = size;
-}
-
-void Entity::toggleSelected()
-{
-	this->selected = !this->selected;
 }
