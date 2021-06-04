@@ -31,12 +31,12 @@ class Board
 
 		void moveCursor(int gameState, int index);
 		int countAvailableMoves();
-		void clearAvailableMoves();
-		BoardCube* getAvailableMove(int index);
+		void clearAvailableMoves(int gameState);
+		BoardCube* getAvailableMove(int gameState, int index);
 		bool isOffBoard(int row, int column);
 
 		void movePiece(Piece* piece, BoardCube* destination);
-		void jumpPiece(Piece* piece, BoardCube* destination);
+		void jumpPiece(int gameState, int index, BoardCube* destination);
 
 		void blackCursor(int gameState, int index);
 		int countBlacks(int gameState);
@@ -55,6 +55,8 @@ class Board
 		BoardCube* getCube(int row, int column);
 		Piece* getWhitePiece(int index);
 		Piece* getBlackPiece(int index);
+		void deletePiece(int gameState, int row, int column);
+		std::tuple<int, int> getCubeBoardPos(BoardCube cube);
 		std::tuple<int, int> getPieceBoardPos(Piece piece);
 
 		void render();

@@ -4,7 +4,7 @@
 class Piece: public Entity
 {
 	public: 
-		void render();
+	    void render();
 		bool isJumpPiece();
 		void setJumpPiece(bool option);
 };

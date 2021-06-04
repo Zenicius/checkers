@@ -139,10 +139,9 @@ void changePlayerTurn()
 	moveIndex = 0;
 	pieceIndex = -1;
 
-	// CHANGE GAME STATE
-	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE)
+	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE) // CHANGE TO PLAYER 1
 	{
-		board.clearAvailableMoves();
+		board.clearAvailableMoves(gameState);
 
 		// CHECK JUMPS AVAILABLE
 		if (board.getBJumpPieces() > 0)
@@ -151,16 +150,17 @@ void changePlayerTurn()
 			cursorIncrease();
 			rotateAnimP2 = true;
 		}
-		else 
+		else // NO JUMPS
 		{
 			gameState = PLAYER1_TURN;
 			cursorIncrease();
 			rotateAnimP2 = true;
 		}
 	}
-	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE)
+	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE ||  // CHANGE TO PLAYER 2
+		gameState == PLAYER1_JUMP_MOVE)						
 	{
-		board.clearAvailableMoves();
+		board.clearAvailableMoves(gameState);
 		gameState = PLAYER2_TURN;
 		rotateAnimP1 = true;
 		cursorIncrease();
@@ -177,7 +177,7 @@ void select()
 		int row = std::get<0>(board.getPieceBoardPos(*piece));
 		int column = std::get<1>(board.getPieceBoardPos(*piece));
 
-		if (gameState == PLAYER1_TURN)
+		if (gameState == PLAYER1_TURN) // NORMAL MOVE
 		{
 			if (row != -1 && board.getBlackMoves(row, column) > 0)
 			{
@@ -185,7 +185,7 @@ void select()
 				board.moveCursor(gameState, moveIndex);
 			}
 		}
-		else if (gameState == PLAYER1_JUMP)
+		else if (gameState == PLAYER1_JUMP) // JUMP MOVE
 		{
 			if (row != -1 && board.getBJumpMoves(row, column) > 0)
 			{
@@ -194,12 +194,13 @@ void select()
 			}
 		}
 	}
-	else if (gameState == PLAYER1_MOVE) // MOVE BLACK PIECE
+	else if (gameState == PLAYER1_MOVE ||  gameState == PLAYER1_JUMP_MOVE) // MOVE BLACK PIECE
 	{
 		Piece* piece = board.getBlackPiece(pieceIndex);
-		BoardCube* destination = board.getAvailableMove(moveIndex);
-
-		board.movePiece(piece, destination);
+		BoardCube* destination = board.getAvailableMove(gameState, moveIndex);
+		
+		if (gameState == PLAYER1_MOVE) board.movePiece(piece, destination);
+		else if (gameState == PLAYER1_JUMP_MOVE) board.jumpPiece(gameState, pieceIndex, destination);
 
 		changePlayerTurn();
 	}
@@ -219,7 +220,7 @@ void select()
 	else if (gameState == PLAYER2_MOVE) // MOVE WHITE PIECE
 	{
 		Piece* piece = board.getWhitePiece(pieceIndex);
-		BoardCube* destination = board.getAvailableMove(moveIndex);
+		BoardCube* destination = board.getAvailableMove(gameState, moveIndex);
 		board.movePiece(piece, destination);
 
 		changePlayerTurn();
@@ -228,20 +229,20 @@ void select()
 
 void deselect()
 {
-	if (gameState == PLAYER1_MOVE || gameState == PLAYER1_JUMP_MOVE)
+	if (gameState == PLAYER1_MOVE || gameState == PLAYER1_JUMP_MOVE) // RETURN TO SELECT P1 PIECE
 	{
 		moveIndex = 0;
-		board.clearAvailableMoves();
+		board.clearAvailableMoves(gameState);
 
 		if (gameState == PLAYER1_MOVE) gameState = PLAYER1_TURN;
 		else if (gameState == PLAYER1_JUMP_MOVE) gameState = PLAYER1_JUMP;
 
 		board.blackCursor(gameState, pieceIndex);
 	}
-	else if (gameState == PLAYER2_MOVE)
+	else if (gameState == PLAYER2_MOVE) // RETURN TO SELECT P2 PIECE
 	{
 		moveIndex = 0;
-		board.clearAvailableMoves();
+		board.clearAvailableMoves(gameState);
 		gameState = PLAYER2_TURN;
 	}
 }

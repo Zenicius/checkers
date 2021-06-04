@@ -126,12 +126,16 @@ int Board::countAvailableMoves()
 	return availableMoves.size();
 }
 
-BoardCube* Board::getAvailableMove(int index)
+BoardCube* Board::getAvailableMove(int gameState, int index)
 {
-	return availableMoves.at(index);
+	if (gameState == PLAYER1_JUMP_MOVE)
+	{
+		return availableJumps.at(index);
+	}
+	else return availableMoves.at(index);
 } 
 
-void Board::clearAvailableMoves()
+void Board::clearAvailableMoves(int gameState)
 {
 	for (BoardCube* cube : availableMoves)
 	{
@@ -146,6 +150,7 @@ void Board::clearAvailableMoves()
 	for (Piece& piece : bPieces)
 	{
 		piece.setColor(0.0f, 0.0f, 0.0f);
+		if (!gameState == PLAYER1_JUMP_MOVE) piece.setJumpPiece(false);
 	}
 
 	for (Piece& piece : wPieces)
@@ -400,9 +405,30 @@ void Board::movePiece(Piece* piece, BoardCube* destination)
 	piece->setPos(destination->getPos().x, 1.0f, destination->getPos().z);
 }
 
-void Board::jumpPiece(Piece* piece, BoardCube* destination)
+void Board::jumpPiece(int gameState, int index, BoardCube* destination)
 {
+	int finalIndex = getBJumpPieceIndex().at(index);
+	Piece* piece = getBlackPiece(finalIndex);
 
+	int pRow = std::get<0>(getPieceBoardPos(*piece));
+	int pColumn = std::get<1>(getPieceBoardPos(*piece));
+
+	int cRow = std::get<0>(getCubeBoardPos(*destination));
+	int cColumn = std::get<1>(getCubeBoardPos(*destination));
+
+	if (gameState == PLAYER1_JUMP_MOVE)
+	{
+		if (pRow > cRow && pColumn < cColumn) // FOWARD RIGHT
+		{
+			deletePiece(gameState, pRow - 1, pColumn + 1);
+		}
+		else if (pRow > cRow && pColumn > cColumn) // FOWARD LEFT
+		{
+			deletePiece(gameState, pRow - 1, pColumn - 1);
+		}
+	}
+
+	movePiece(piece, destination);
 }
 
 BoardCube* Board::getCube(int row, int column)
@@ -415,9 +441,43 @@ Piece* Board::getWhitePiece(int index)
 	return &wPieces.at(index);
 }
 
+void Board::deletePiece(int gameState, int row, int column)
+{
+	if (gameState == PLAYER1_JUMP_MOVE)
+	{
+		BoardCube* cube = getCube(row, column);
+		for (int i = 0; i < wPieces.size(); i++)
+		{
+			if (wPieces[i].getPos().x == cube->getPos().x &&
+				wPieces[i].getPos().z == cube->getPos().z)
+			{
+				wPieces.erase(wPieces.begin() + i);
+			}
+		}
+	}
+}
+
 Piece* Board::getBlackPiece(int index)
 {
 	return &bPieces.at(index);
+}
+
+std::tuple<int, int> Board::getCubeBoardPos(BoardCube cube)
+{
+	for (int j = 0; j < 8; j++)
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			if (cube.getPos().x == boardCubes[j][i].getPos().x &&
+				cube.getPos().z == boardCubes[j][i].getPos().z)
+			{
+				return std::make_tuple(j, i);
+			}
+		}
+	}
+
+	return std::make_tuple(-1, -1);
+
 }
 
 std::tuple<int, int> Board::getPieceBoardPos(Piece piece)
