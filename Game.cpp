@@ -28,7 +28,9 @@
 
 #define PLAYER2_TURN 2
 #define PLAYER2_MOVE 22
-#define PLAYER2_WON 222 
+#define PLAYER2_JUMP 222
+#define PLAYER2_JUMP_MOVE 2222
+#define PLAYER2_WON 22222
 
 // WINDOW
 const char* title = "Damas";
@@ -85,12 +87,12 @@ void cursorIncrease()
 			board.blackCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER2_TURN) // SELECTING WHITE PIECE
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) // SELECTING WHITE PIECE
 	{
-		if (pieceIndex < board.countWhites() - 1)
+		if (pieceIndex < board.countWhites(gameState) - 1)
 		{
 			pieceIndex++;
-			board.whiteCursor(pieceIndex);
+			board.whiteCursor(gameState, pieceIndex);
 		}
 	}
 	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) // MOVING PIECE
@@ -113,12 +115,12 @@ void cursorDecrease()
 			board.blackCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER2_TURN) // SELECTING WHITE PIECE
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) // SELECTING WHITE PIECE
 	{
 		if (pieceIndex > 0)
 		{
 			pieceIndex--;
-			board.whiteCursor(pieceIndex);
+			board.whiteCursor(gameState, pieceIndex);
 		}
 	}
 	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) // MOVING PIECE
@@ -139,7 +141,8 @@ void changePlayerTurn()
 	moveIndex = 0;
 	pieceIndex = -1;
 
-	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE) // CHANGE TO PLAYER 1
+	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE ||	// CHANGE TO PLAYER 1
+		gameState == PLAYER2_JUMP_MOVE) 
 	{
 		board.clearAvailableMoves(gameState);
 
@@ -161,9 +164,20 @@ void changePlayerTurn()
 		gameState == PLAYER1_JUMP_MOVE)						
 	{
 		board.clearAvailableMoves(gameState);
-		gameState = PLAYER2_TURN;
-		rotateAnimP1 = true;
-		cursorIncrease();
+
+		// CHECK JUMPS AVAILABLE
+		if (board.getWJumpPieces() > 0)
+		{
+			gameState = PLAYER2_JUMP;
+			cursorIncrease();
+			rotateAnimP1 = true;
+		}
+		else // NO JUMPS
+		{
+			gameState = PLAYER2_TURN;
+			cursorIncrease();
+			rotateAnimP1 = true;
+		}
 	}
 }
 
@@ -205,23 +219,38 @@ void select()
 		changePlayerTurn();
 	}
 
-	else if (gameState == PLAYER2_TURN) // SELECTING WHITE PIECE
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) // SELECTING WHITE PIECE
 	{
-		Piece* piece = board.getWhitePiece(pieceIndex);
+		int index = pieceIndex;
+		if (gameState == PLAYER2_JUMP) index = board.getWJumpPieceIndex().at(pieceIndex);
+		Piece* piece = board.getWhitePiece(index);
 		int row = std::get<0>(board.getPieceBoardPos(*piece));
 		int column = std::get<1>(board.getPieceBoardPos(*piece));
 
-		if (row != -1 && board.getWhiteMoves(row, column) > 0)
+		if (gameState == PLAYER2_TURN)
 		{
-			gameState = PLAYER2_MOVE;
-			board.moveCursor(gameState, moveIndex);
+			if (row != -1 && board.getWhiteMoves(row, column) > 0)
+			{
+				gameState = PLAYER2_MOVE;
+				board.moveCursor(gameState, moveIndex);
+			}
+		}
+		else if (gameState == PLAYER2_JUMP)
+		{
+			if (row != -1 && board.getWJumpMoves(row, column) > 0)
+			{
+				gameState = PLAYER2_JUMP_MOVE;
+				board.moveCursor(gameState, moveIndex);
+			}
 		}
 	}
-	else if (gameState == PLAYER2_MOVE) // MOVE WHITE PIECE
+	else if (gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP_MOVE) // MOVE WHITE PIECE
 	{
 		Piece* piece = board.getWhitePiece(pieceIndex);
 		BoardCube* destination = board.getAvailableMove(gameState, moveIndex);
-		board.movePiece(piece, destination);
+		
+		if (gameState == PLAYER2_MOVE) board.movePiece(piece, destination);
+		else if (gameState == PLAYER2_JUMP_MOVE) board.jumpPiece(gameState, pieceIndex, destination);
 
 		changePlayerTurn();
 	}
@@ -239,11 +268,15 @@ void deselect()
 
 		board.blackCursor(gameState, pieceIndex);
 	}
-	else if (gameState == PLAYER2_MOVE) // RETURN TO SELECT P2 PIECE
-	{
+	else if (gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP_MOVE) // RETURN TO SELECT P2 PIECE
+	{ 
 		moveIndex = 0;
 		board.clearAvailableMoves(gameState);
-		gameState = PLAYER2_TURN;
+
+		if (gameState == PLAYER2_MOVE) gameState = PLAYER2_TURN;
+		else if (gameState == PLAYER2_JUMP_MOVE) gameState = PLAYER2_JUMP;
+
+		board.whiteCursor(gameState, pieceIndex);
 	}
 }
 
@@ -297,7 +330,8 @@ void renderDebug()
 	// MANDATORY JUMP
 	std::string mandatoryText = "Mandatory Jump";
 	if (gameState == PLAYER1_JUMP || gameState == PLAYER1_JUMP_MOVE
-		) renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 0, 0, 0);
+		|| gameState == PLAYER2_JUMP || gameState == PLAYER2_JUMP_MOVE) 
+			renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 0, 0, 0);
 
 	// MOUSE POS X INFO
 	std::string mouseXText = "Mouse Pos X: " + std::to_string(mouseX);
@@ -398,7 +432,7 @@ void keyboardInput(unsigned char key, int x, int y)
 		break;
 	case 32:
 		lastKeyPressed = "SPACE";
-		select();
+		if(!rotateAnimP1 && !rotateAnimP2) select();
 		break;
 	case 'a':
 		lastKeyPressed = "A";

@@ -110,7 +110,7 @@ void Board::moveCursor(int gameState, int index)
 
 		availableMoves.at(index)->setColor(255.0f, 0.0f, 0.0f);
 	}
-	else if (gameState == PLAYER1_JUMP_MOVE)
+	else if (gameState == PLAYER1_JUMP_MOVE || gameState == PLAYER2_JUMP_MOVE)
 	{
 		for (BoardCube* cube : availableJumps)
 		{
@@ -128,7 +128,7 @@ int Board::countAvailableMoves()
 
 BoardCube* Board::getAvailableMove(int gameState, int index)
 {
-	if (gameState == PLAYER1_JUMP_MOVE)
+	if (gameState == PLAYER1_JUMP_MOVE || gameState == PLAYER2_JUMP_MOVE)
 	{
 		return availableJumps.at(index);
 	}
@@ -156,6 +156,7 @@ void Board::clearAvailableMoves(int gameState)
 	for (Piece& piece : wPieces)
 	{
 		piece.setColor(255.0f, 255.0f, 255.0f);
+		if (!gameState == PLAYER2_JUMP_MOVE) piece.setJumpPiece(false);
 	}
 
 	availableMoves.clear();
@@ -230,7 +231,7 @@ void Board::blackCursor(int gameState, int index)
 			piece.setColor(0.0f, 0.0f, 0.0f);
 		}
 
-		getBlackPiece(pIndex)->setColor(0.0f, 255.0f, 0.0f);
+		getBlackPiece(pIndex)->setColor(255.0f, 255.0f, 0.0f);
 	}
 }
 
@@ -363,19 +364,75 @@ bool Board::hasWhitePiece(int row, int column)
 	return false;
 }
 
-int Board::countWhites()
+bool Board::isValidWhiteJump(int srcRow, int srcColumn, int destRow, int destColumn)
 {
-	return wPieces.size();
-}
-
-void Board::whiteCursor(int index)
-{
-	for (Piece& piece : wPieces)
+	if (srcColumn < destColumn && hasBlackPiece(destRow, destColumn)) // GOING FOWARD LEFT
 	{
-		piece.setColor(255.0f, 255.0f, 255.0f);
+		if (hasWhitePiece(destRow + 1, destColumn + 1) || hasBlackPiece(destRow + 1, destColumn + 1) ||
+			isOffBoard(destRow + 1, destColumn + 1))
+		{
+			return false;
+		}
+		else return true;
+	}
+	else if (srcColumn > destColumn && hasBlackPiece(destRow, destColumn)) // GOING FOWARD RIGHT
+	{
+		if (hasWhitePiece(destRow + 1, destColumn - 1) || hasBlackPiece(destRow + 1, destColumn - 1) ||
+			isOffBoard(destRow + 1, destColumn - 1))
+		{
+			return false;
+		}
+		else return true;
 	}
 
-	getWhitePiece(index)->setColor(0.0f, 0.0f, 255.0f);
+	return false;
+}
+
+int Board::countWhites(int gameState)
+{
+	if (gameState == PLAYER2_TURN)
+	{
+		return wPieces.size();
+	}
+	else if (gameState == PLAYER2_JUMP)
+	{
+		int count = 0;
+		for (Piece& piece : wPieces)
+		{
+			if (piece.isJumpPiece())
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	return 0;
+}
+
+void Board::whiteCursor(int gameState, int index)
+{
+	if (gameState == PLAYER2_TURN)
+	{
+		for (Piece& piece : wPieces)
+		{
+			piece.setColor(255.0f, 255.0f, 255.0f);
+		}
+
+		getWhitePiece(index)->setColor(0.0f, 0.0f, 255.0f);
+	}
+	else if (gameState == PLAYER2_JUMP)
+	{
+		int pIndex = getWJumpPieceIndex().at(index);
+
+		for (Piece& piece : wPieces)
+		{
+			piece.setColor(255.0f, 255.0f, 255.0f);
+		}
+
+		getWhitePiece(pIndex)->setColor(255.0f, 0.0f, 255.0f);
+	}
 }
 
 int Board::getWhiteMoves(int row, int column)
@@ -400,6 +457,76 @@ int Board::getWhiteMoves(int row, int column)
 	return availableMoves.size();
 }
 
+int Board::getWJumpMoves(int row, int column)
+{
+	int destRow = row + 1;
+	int destLeftColumn = column + 1;
+	int destRightColumn = column - 1;
+
+	// FOWARD LEFT
+	if (isValidWhiteJump(row, column, destRow, destLeftColumn))
+	{
+		printf("AQUI");
+		availableJumps.push_back(&boardCubes[destRow + 1][destLeftColumn + 1]);
+	}
+
+	// FOWARD RIGHT
+	if (isValidWhiteJump(row, column, destRow, destRightColumn))
+	{
+		printf("AQUI");
+		availableJumps.push_back(&boardCubes[destRow + 1][destRightColumn - 1]);
+	}
+
+	// BACKWARDS LEFT
+	// BACKWARDS RIGHT
+
+	return availableJumps.size();
+}
+
+std::vector<int> Board::getWJumpPieceIndex()
+{
+	std::vector<int> indexes;
+	for (int i = 0; i < wPieces.size(); i++)
+	{
+		if (wPieces[i].isJumpPiece())
+		{
+			indexes.push_back(i);
+		}
+	}
+
+	return indexes;
+}
+
+int Board::getWJumpPieces()
+{
+	int count = 0;
+	for (Piece& piece : wPieces)
+	{
+		int row = std::get<0>(getPieceBoardPos(piece));
+		int column = std::get<1>(getPieceBoardPos(piece));
+
+		int destRow = row + 1;
+		int destLeftColumn = column + 1;
+		int destRightColumn = column - 1;
+
+		if (isValidWhiteJump(row, column, destRow, destLeftColumn)) // FOWARD LEFT
+		{
+			piece.setJumpPiece(true);
+			count++;
+		}
+		else if (isValidWhiteJump(row, column, destRow, destRightColumn)) // FOWARD RIGHT
+		{
+			piece.setJumpPiece(true);
+			count++;
+		}
+
+		// BACKWARDS LEFT
+		// BACKWARDS RIGHT
+	}
+
+	return count;
+}
+
 void Board::movePiece(Piece* piece, BoardCube* destination)
 {
 	piece->setPos(destination->getPos().x, 1.0f, destination->getPos().z);
@@ -407,17 +534,19 @@ void Board::movePiece(Piece* piece, BoardCube* destination)
 
 void Board::jumpPiece(int gameState, int index, BoardCube* destination)
 {
-	int finalIndex = getBJumpPieceIndex().at(index);
-	Piece* piece = getBlackPiece(finalIndex);
-
-	int pRow = std::get<0>(getPieceBoardPos(*piece));
-	int pColumn = std::get<1>(getPieceBoardPos(*piece));
-
-	int cRow = std::get<0>(getCubeBoardPos(*destination));
-	int cColumn = std::get<1>(getCubeBoardPos(*destination));
-
+	int finalIndex;
+	Piece* piece = {};
 	if (gameState == PLAYER1_JUMP_MOVE)
 	{
+		finalIndex = getBJumpPieceIndex().at(index);
+		piece = getBlackPiece(finalIndex);
+
+		int pRow = std::get<0>(getPieceBoardPos(*piece));
+		int pColumn = std::get<1>(getPieceBoardPos(*piece));
+
+		int cRow = std::get<0>(getCubeBoardPos(*destination));
+		int cColumn = std::get<1>(getCubeBoardPos(*destination));
+
 		if (pRow > cRow && pColumn < cColumn) // FOWARD RIGHT
 		{
 			deletePiece(gameState, pRow - 1, pColumn + 1);
@@ -425,6 +554,26 @@ void Board::jumpPiece(int gameState, int index, BoardCube* destination)
 		else if (pRow > cRow && pColumn > cColumn) // FOWARD LEFT
 		{
 			deletePiece(gameState, pRow - 1, pColumn - 1);
+		}
+	}
+	else if (gameState == PLAYER2_JUMP_MOVE)
+	{
+		finalIndex = getWJumpPieceIndex().at(index);
+		piece = getWhitePiece(finalIndex);
+
+		int pRow = std::get<0>(getPieceBoardPos(*piece));
+		int pColumn = std::get<1>(getPieceBoardPos(*piece));
+
+		int cRow = std::get<0>(getCubeBoardPos(*destination));
+		int cColumn = std::get<1>(getCubeBoardPos(*destination));
+
+		if (pRow < cRow && pColumn > cColumn) // FOWARD RIGHT
+		{
+			deletePiece(gameState, pRow + 1, pColumn - 1);
+		}
+		else if (pRow < cRow && pColumn < cColumn) // FOWARD LEFT
+		{
+			deletePiece(gameState, pRow + 1, pColumn + 1);
 		}
 	}
 
@@ -452,6 +601,18 @@ void Board::deletePiece(int gameState, int row, int column)
 				wPieces[i].getPos().z == cube->getPos().z)
 			{
 				wPieces.erase(wPieces.begin() + i);
+			}
+		}
+	}
+	else if (gameState == PLAYER2_JUMP_MOVE)
+	{
+		BoardCube* cube = getCube(row, column);
+		for (int i = 0; i < bPieces.size(); i++)
+		{
+			if (bPieces[i].getPos().x == cube->getPos().x &&
+				bPieces[i].getPos().z == cube->getPos().z)
+			{
+				bPieces.erase(bPieces.begin() + i);
 			}
 		}
 	}

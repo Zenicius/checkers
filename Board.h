@@ -15,7 +15,9 @@
 
 #define PLAYER2_TURN 2
 #define PLAYER2_MOVE 22
-#define PLAYER2_WON 222 
+#define PLAYER2_JUMP 222
+#define PLAYER2_JUMP_MOVE 2222
+#define PLAYER2_WON 22222
 
 class Board
 {
@@ -47,10 +49,14 @@ class Board
 		std::vector<int> getBJumpPieceIndex();
 		int getBJumpPieces();
 
-		void whiteCursor(int index);
-		int countWhites();
+		void whiteCursor(int gameState, int index);
+		int countWhites(int gameState);
 		bool hasWhitePiece(int row, int column);
+		bool isValidWhiteJump(int srcRow, int srcColumn, int destRow, int destColumn);
 		int getWhiteMoves(int row, int column);
+		int getWJumpMoves(int row, int column);
+		std::vector<int> getWJumpPieceIndex();
+		int getWJumpPieces();
 
 		BoardCube* getCube(int row, int column);
 		Piece* getWhitePiece(int index);
