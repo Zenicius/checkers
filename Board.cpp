@@ -150,13 +150,13 @@ void Board::clearAvailableMoves(int gameState)
 	for (Piece& piece : bPieces)
 	{
 		piece.setColor(0.0f, 0.0f, 0.0f);
-		if (!gameState == PLAYER1_JUMP_MOVE) piece.setJumpPiece(false);
+		if (gameState != PLAYER1_JUMP_MOVE) piece.setJumpPiece(false);
 	}
 
 	for (Piece& piece : wPieces)
 	{
 		piece.setColor(255.0f, 255.0f, 255.0f);
-		if (!gameState == PLAYER2_JUMP_MOVE) piece.setJumpPiece(false);
+		if (gameState != PLAYER2_JUMP_MOVE) piece.setJumpPiece(false);
 	}
 
 	availableMoves.clear();
@@ -189,7 +189,7 @@ bool Board::hasBlackPiece(int row, int column)
 
 bool Board::isValidBlackJump(int srcRow, int srcColumn, int destRow, int destColumn)
 {
-	if (srcColumn > destColumn && hasWhitePiece(destRow, destColumn)) // GOING FOWARD LEFT
+	if (srcRow > destRow && srcColumn > destColumn && hasWhitePiece(destRow, destColumn)) // GOING FOWARD LEFT
 	{
 		if (hasWhitePiece(destRow - 1, destColumn - 1) || hasBlackPiece(destRow - 1, destColumn - 1) || 
 			isOffBoard(destRow - 1, destColumn - 1))
@@ -198,10 +198,28 @@ bool Board::isValidBlackJump(int srcRow, int srcColumn, int destRow, int destCol
 		}
 		else return true;
 	}
-	else if (srcColumn < destColumn && hasWhitePiece(destRow, destColumn)) // GOING FOWARD RIGHT
+	else if (srcRow > destRow && srcColumn < destColumn && hasWhitePiece(destRow, destColumn)) // GOING FOWARD RIGHT
 	{
 		if (hasWhitePiece(destRow - 1, destColumn + 1) || hasBlackPiece(destRow - 1, destColumn + 1) ||
 			isOffBoard(destRow - 1, destColumn + 1))
+		{
+			return false;
+		}
+		else return true;
+	}
+	else if (srcRow < destRow && srcColumn > destColumn && hasWhitePiece(destRow, destColumn)) // GOING BACKWARDS LEFT
+	{
+		if (hasWhitePiece(destRow + 1, destColumn - 1) || hasBlackPiece(destRow + 1, destColumn - 1) ||
+			isOffBoard(destRow + 1, destColumn - 1))
+		{
+			return false;
+		}
+		else return true;
+	}
+	else if (srcRow < destRow && srcColumn < destColumn && hasWhitePiece(destRow, destColumn)) // GOING BACKWARDS RIGHT
+	{
+		if (hasWhitePiece(destRow + 1, destColumn + 1) || hasBlackPiece(destRow + 1, destColumn + 1) ||
+			isOffBoard(destRow + 1, destColumn + 1))
 		{
 			return false;
 		}
@@ -297,24 +315,34 @@ std::vector<int> Board::getBJumpPieceIndex()
 
 int Board::getBJumpMoves(int row, int column)
 {
-	int destRow = row - 1;
+	int destRowFoward = row - 1;
+	int destRowBackwards = row + 1;
 	int destLeftColumn = column - 1;
 	int destRightColumn = column + 1;
 
 	// FOWARD LEFT
-	if (isValidBlackJump(row, column, destRow, destLeftColumn))
+	if (isValidBlackJump(row, column, destRowFoward, destLeftColumn))
 	{
-		availableJumps.push_back(&boardCubes[destRow - 1][destLeftColumn - 1]);
+		availableJumps.push_back(&boardCubes[destRowFoward - 1][destLeftColumn - 1]);
 	}
 
 	// FOWARD RIGHT
-	if (isValidBlackJump(row, column, destRow, destRightColumn))
+	if (isValidBlackJump(row, column, destRowFoward, destRightColumn))
 	{
-		availableJumps.push_back(&boardCubes[destRow - 1][destRightColumn + 1]);
+		availableJumps.push_back(&boardCubes[destRowFoward - 1][destRightColumn + 1]);
 	}
 
 	// BACKWARDS LEFT
+	if (isValidBlackJump(row, column, destRowBackwards, destLeftColumn))
+	{
+		availableJumps.push_back(&boardCubes[destRowBackwards + 1][destLeftColumn - 1]);
+	}
+
 	// BACKWARDS RIGHT
+	if (isValidBlackJump(row, column, destRowBackwards, destRightColumn))
+	{
+		availableJumps.push_back(&boardCubes[destRowBackwards + 1][destRightColumn + 1]);
+	}
 
 	return availableJumps.size();
 }
@@ -328,22 +356,18 @@ int Board::getBJumpPieces()
 		int column = std::get<1>(getPieceBoardPos(piece));
 
 		int destRow = row - 1;
+		int destRowBackwards = row + 1;
 		int destLeftColumn = column - 1;
 		int destRightColumn = column + 1;
 
-		if (isValidBlackJump(row, column, destRow, destLeftColumn)) // FOWARD LEFT
+		if (isValidBlackJump(row, column, destRow, destLeftColumn)			||		// FOWARD LEFT
+			isValidBlackJump(row, column, destRow, destRightColumn)			||      // FOWARD RIGHT
+			isValidBlackJump(row, column, destRowBackwards, destLeftColumn) ||		// BACKWARDS LEFT
+			isValidBlackJump(row, column, destRowBackwards, destRightColumn))		// BACKWARDS RIGHT
 		{
 			piece.setJumpPiece(true);
 			count++;
 		}
-		else if (isValidBlackJump(row, column, destRow, destRightColumn)) // FOWARD RIGHT
-		{
-			piece.setJumpPiece(true);
-			count++;
-		}
-
-		// BACKWARDS LEFT
-		// BACKWARDS RIGHT
 	}
 
 	return count;
@@ -366,7 +390,7 @@ bool Board::hasWhitePiece(int row, int column)
 
 bool Board::isValidWhiteJump(int srcRow, int srcColumn, int destRow, int destColumn)
 {
-	if (srcColumn < destColumn && hasBlackPiece(destRow, destColumn)) // GOING FOWARD LEFT
+	if (srcRow < destRow && srcColumn < destColumn && hasBlackPiece(destRow, destColumn)) // GOING FOWARD LEFT
 	{
 		if (hasWhitePiece(destRow + 1, destColumn + 1) || hasBlackPiece(destRow + 1, destColumn + 1) ||
 			isOffBoard(destRow + 1, destColumn + 1))
@@ -375,10 +399,28 @@ bool Board::isValidWhiteJump(int srcRow, int srcColumn, int destRow, int destCol
 		}
 		else return true;
 	}
-	else if (srcColumn > destColumn && hasBlackPiece(destRow, destColumn)) // GOING FOWARD RIGHT
+	else if (srcRow < destRow && srcColumn > destColumn && hasBlackPiece(destRow, destColumn)) // GOING FOWARD RIGHT
 	{
 		if (hasWhitePiece(destRow + 1, destColumn - 1) || hasBlackPiece(destRow + 1, destColumn - 1) ||
 			isOffBoard(destRow + 1, destColumn - 1))
+		{
+			return false;
+		}
+		else return true;
+	}
+	else if (srcRow > destRow && srcColumn < destColumn && hasBlackPiece(destRow, destColumn)) // GOING BACKWARDS LEFT
+	{
+		if (hasWhitePiece(destRow - 1, destColumn + 1) || hasBlackPiece(destRow - 1, destColumn + 1) ||
+			isOffBoard(destRow - 1, destColumn + 1))
+		{
+			return false;
+		}
+		else return true;
+	}
+	else if (srcRow > destRow && srcColumn > destColumn && hasBlackPiece(destRow, destColumn)) // GOING BACKWARDS RIGHT
+	{
+		if (hasWhitePiece(destRow - 1, destColumn - 1) || hasBlackPiece(destRow - 1, destColumn - 1) ||
+			isOffBoard(destRow - 1, destColumn - 1))
 		{
 			return false;
 		}
@@ -459,26 +501,34 @@ int Board::getWhiteMoves(int row, int column)
 
 int Board::getWJumpMoves(int row, int column)
 {
-	int destRow = row + 1;
+	int destRowFoward = row + 1;
+	int destRowBackwards = row - 1;
 	int destLeftColumn = column + 1;
 	int destRightColumn = column - 1;
 
 	// FOWARD LEFT
-	if (isValidWhiteJump(row, column, destRow, destLeftColumn))
+	if (isValidWhiteJump(row, column, destRowFoward, destLeftColumn))
 	{
-		printf("AQUI");
-		availableJumps.push_back(&boardCubes[destRow + 1][destLeftColumn + 1]);
+		availableJumps.push_back(&boardCubes[destRowFoward + 1][destLeftColumn + 1]);
 	}
 
 	// FOWARD RIGHT
-	if (isValidWhiteJump(row, column, destRow, destRightColumn))
+	if (isValidWhiteJump(row, column, destRowFoward, destRightColumn))
 	{
-		printf("AQUI");
-		availableJumps.push_back(&boardCubes[destRow + 1][destRightColumn - 1]);
+		availableJumps.push_back(&boardCubes[destRowFoward + 1][destRightColumn - 1]);
 	}
 
 	// BACKWARDS LEFT
+	if (isValidWhiteJump(row, column, destRowBackwards, destLeftColumn))
+	{
+		availableJumps.push_back(&boardCubes[destRowBackwards - 1][destLeftColumn + 1]);
+	}
+
 	// BACKWARDS RIGHT
+	if (isValidWhiteJump(row, column, destRowBackwards, destRightColumn))
+	{
+		availableJumps.push_back(&boardCubes[destRowBackwards - 1][destRightColumn - 1]);
+	}
 
 	return availableJumps.size();
 }
@@ -506,22 +556,18 @@ int Board::getWJumpPieces()
 		int column = std::get<1>(getPieceBoardPos(piece));
 
 		int destRow = row + 1;
+		int destRowBackwards = row - 1;
 		int destLeftColumn = column + 1;
 		int destRightColumn = column - 1;
 
-		if (isValidWhiteJump(row, column, destRow, destLeftColumn)) // FOWARD LEFT
+		if (isValidWhiteJump(row, column, destRow, destLeftColumn)			||		// FOWARD LEFT 
+			isValidWhiteJump(row, column, destRow, destRightColumn)			||		// FOWARD RIGHT
+			isValidWhiteJump(row, column, destRowBackwards, destLeftColumn) ||		// BACKWARDS LEFT
+			isValidWhiteJump(row, column, destRowBackwards, destRightColumn))		// BACKWARDS RIGHT  
 		{
 			piece.setJumpPiece(true);
 			count++;
 		}
-		else if (isValidWhiteJump(row, column, destRow, destRightColumn)) // FOWARD RIGHT
-		{
-			piece.setJumpPiece(true);
-			count++;
-		}
-
-		// BACKWARDS LEFT
-		// BACKWARDS RIGHT
 	}
 
 	return count;
@@ -555,6 +601,14 @@ void Board::jumpPiece(int gameState, int index, BoardCube* destination)
 		{
 			deletePiece(gameState, pRow - 1, pColumn - 1);
 		}
+		else if(pRow < cRow && pColumn < cColumn) // BACKWARDS RIGHT
+		{
+			deletePiece(gameState, pRow + 1, pColumn + 1);
+		}
+		else if (pRow < cRow && pColumn > cColumn) // BACKWARDS LEFT
+		{
+			deletePiece(gameState, pRow + 1, pColumn - 1);
+		}
 	}
 	else if (gameState == PLAYER2_JUMP_MOVE)
 	{
@@ -574,6 +628,14 @@ void Board::jumpPiece(int gameState, int index, BoardCube* destination)
 		else if (pRow < cRow && pColumn < cColumn) // FOWARD LEFT
 		{
 			deletePiece(gameState, pRow + 1, pColumn + 1);
+		}
+		else if (pRow > cRow && pColumn > cColumn) // BACKWARDS RIGHT
+		{
+			deletePiece(gameState, pRow - 1, pColumn - 1);
+		}
+		else if (pRow > cRow && pColumn < cColumn) // BACKWARDS LEFT
+		{
+			deletePiece(gameState, pRow - 1, pColumn + 1);
 		}
 	}
 
