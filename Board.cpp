@@ -179,7 +179,7 @@ bool Board::hasBlackPiece(int row, int column)
 
 	for (Piece& piece : bPieces)
 	{
-		if (piece.getPos().x == x && piece.getPos().z == z) {
+		if (piece.getFinalPos().x == x && piece.getFinalPos().z == z) {
 			return true;
 		}
 	}
@@ -380,7 +380,7 @@ bool Board::hasWhitePiece(int row, int column)
 
 	for (Piece& piece : wPieces)
 	{
-		if (piece.getPos().x == x && piece.getPos().z == z) {
+		if (piece.getFinalPos().x == x && piece.getFinalPos().z == z) {
 			return true;
 		}
 	}
@@ -575,7 +575,8 @@ int Board::getWJumpPieces()
 
 void Board::movePiece(Piece* piece, BoardCube* destination)
 {
-	piece->setPos(destination->getPos().x, 1.0f, destination->getPos().z);
+	float startTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+	piece->startAnimation(destination->getPos().x, 1.0f, destination->getPos().z, startTime, 1.0f);
 }
 
 void Board::jumpPiece(int gameState, int index, BoardCube* destination)
@@ -659,8 +660,8 @@ void Board::deletePiece(int gameState, int row, int column)
 		BoardCube* cube = getCube(row, column);
 		for (int i = 0; i < wPieces.size(); i++)
 		{
-			if (wPieces[i].getPos().x == cube->getPos().x &&
-				wPieces[i].getPos().z == cube->getPos().z)
+			if (wPieces[i].getFinalPos().x == cube->getPos().x &&
+				wPieces[i].getFinalPos().z == cube->getPos().z)
 			{
 				wPieces.erase(wPieces.begin() + i);
 			}
@@ -671,8 +672,8 @@ void Board::deletePiece(int gameState, int row, int column)
 		BoardCube* cube = getCube(row, column);
 		for (int i = 0; i < bPieces.size(); i++)
 		{
-			if (bPieces[i].getPos().x == cube->getPos().x &&
-				bPieces[i].getPos().z == cube->getPos().z)
+			if (bPieces[i].getFinalPos().x == cube->getPos().x &&
+				bPieces[i].getFinalPos().z == cube->getPos().z)
 			{
 				bPieces.erase(bPieces.begin() + i);
 			}
@@ -709,8 +710,8 @@ std::tuple<int, int> Board::getPieceBoardPos(Piece piece)
 	{
 		for (int i = 0; i < 8; i++)
 		{
-			if (piece.getPos().x == boardCubes[j][i].getPos().x &&
-				piece.getPos().z == boardCubes[j][i].getPos().z)
+			if (piece.getFinalPos().x == boardCubes[j][i].getPos().x &&
+				piece.getFinalPos().z == boardCubes[j][i].getPos().z)
 			{
 				return std::make_tuple(j, i);
 			}
@@ -719,6 +720,22 @@ std::tuple<int, int> Board::getPieceBoardPos(Piece piece)
 
 	return std::make_tuple(-1, -1);
 
+}
+
+void Board::tick(float t)
+{
+	// WHITE PIECES
+	for (Piece& piece : wPieces)
+	{
+		piece.tick(t);
+
+	}
+
+	// BLACK PIECES
+	for (Piece& piece : bPieces)
+	{
+		piece.tick(t);
+	}
 }
 
 void Board::render()

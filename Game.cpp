@@ -4,6 +4,7 @@
 */
 
 #define _CRT_SECURE_NO_WARNINGS
+#include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
 #include <string>
@@ -68,7 +69,7 @@ void init()
 {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_COLOR_MATERIAL);
-	glClearColor(0.0f, 0.6f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 /*
@@ -322,40 +323,40 @@ void renderDebug()
 {
 	// MOUSE POS X INFO
 	std::string gameStateText = "GameState: " + std::to_string(gameState);
-	renderText(600, 700, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 0, 0, 0);
+	renderText(600, 700, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// LAST KEY PRESSED
-	renderText(1150, 15, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 0, 0, 0);
+	renderText(1150, 15, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// MANDATORY JUMP
 	std::string mandatoryText = "Mandatory Jump";
 	if (gameState == PLAYER1_JUMP || gameState == PLAYER1_JUMP_MOVE
 		|| gameState == PLAYER2_JUMP || gameState == PLAYER2_JUMP_MOVE) 
-			renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 0, 0, 0);
+			renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// MOUSE POS X INFO
 	std::string mouseXText = "Mouse Pos X: " + std::to_string(mouseX);
-	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText.c_str(), 0, 0, 0);
+	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// MOUSE POS X INFO
 	std::string mouseYText = "Mouse Pos Y: " + std::to_string(mouseY);
-	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText.c_str(), 0, 0, 0);
+	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// ROTATE ANGLE
 	std::string rotateAngleText = "Rotate: " + std::to_string(rotateAngle);
-	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, rotateAngleText.c_str(), 0, 0, 0);
+	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, rotateAngleText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// CAMERA VALUE X INFO
 	std::string cameraValueText = "Camera Value X: " + std::to_string(cameraValueX);
-	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueText.c_str(), 0, 0, 0);
+	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// CAMERA VALUE Y INFO
 	std::string cameraValueYText = "Camera Value Y: " + std::to_string(cameraValueY);
-	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText.c_str(), 0, 0, 0);
+	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText.c_str(), 255.0f, 255.0f, 255.0f);
 
 	// ZOOM VALUE INFO
 	std::string zoomValueText = "Zoom Value " + std::to_string(zoomValue);
-	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText.c_str(), 0, 0, 0);
+	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText.c_str(), 255.0f, 255.0f, 255.0f);
 }
 
 void render()
@@ -518,7 +519,6 @@ void mouseMoveInput(int x, int y)
 
 void tick(int value)
 {
-	glutPostRedisplay();
 	glutTimerFunc(1, tick, 0);
 
 	// ROTATE ANIM
@@ -532,6 +532,12 @@ void tick(int value)
 		rotateAngle -= 4.0f;
 		if (rotateAngle == 0.0f) rotateAnimP2 = false;
 	}
+	
+	// UPDATE BOARD
+	const double t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+	board.tick(t);
+
+	glutPostRedisplay();
 }
 
 int main(int argc, char** argv)

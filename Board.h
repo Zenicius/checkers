@@ -65,6 +65,7 @@ class Board
 		std::tuple<int, int> getCubeBoardPos(BoardCube cube);
 		std::tuple<int, int> getPieceBoardPos(Piece piece);
 
+		void tick(float t);
 		void render();
 };
 
