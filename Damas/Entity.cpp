@@ -11,8 +11,6 @@ Entity::Entity()
 	this->blue = 0.0f;
 
 	this->size = 0.0;
-
-	this->jump = false;
 }
 
 Entity::Entity(float x, float y, float z, float red, float green, float blue, double size)
@@ -26,8 +24,6 @@ Entity::Entity(float x, float y, float z, float red, float green, float blue, do
 	this->blue = blue;
 
 	this->size = size;
-
-	this->jump = false;
 } 
 
 Pos Entity::getPos()

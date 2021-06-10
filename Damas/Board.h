@@ -41,6 +41,7 @@ class Board
 		void movePiece(Piece* piece, BoardCube* destination);
 		void jumpPiece(int gameState, int index, BoardCube* destination);
 
+		bool promoteBlacks();
 		void blackCursor(int gameState, int index);
 		int countBlacks(int gameState);
 		bool hasBlackPiece(int row, int column);
@@ -50,6 +51,7 @@ class Board
 		std::vector<int> getBJumpPieceIndex();
 		int getBJumpPieces();
 
+		bool promoteWhites();
 		void whiteCursor(int gameState, int index);
 		int countWhites(int gameState);
 		bool hasWhitePiece(int row, int column);

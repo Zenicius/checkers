@@ -237,6 +237,24 @@ bool Board::isValidBlackJump(int srcRow, int srcColumn, int destRow, int destCol
 	return false;
 }
 
+bool Board::promoteBlacks()
+{
+	for (Piece& piece : bPieces)
+	{
+		int row = std::get<0>(getPieceBoardPos(piece));
+
+		if (row == 0 && !piece.isKing())
+		{
+			piece.setKing(true);
+			piece.setSize(0.70);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void Board::blackCursor(int gameState, int index)
 {
 	if (gameState == PLAYER1_TURN)
@@ -462,6 +480,24 @@ int Board::countWhites(int gameState)
 	}
 
 	return 0;
+}
+
+bool Board::promoteWhites()
+{
+	for (Piece& piece : wPieces)
+	{
+		int row = std::get<0>(getPieceBoardPos(piece));
+
+		if (row == 7 && !piece.isKing())
+		{
+			piece.setKing(true);
+			piece.setSize(0.70);
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void Board::whiteCursor(int gameState, int index)

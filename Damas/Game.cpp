@@ -84,7 +84,7 @@ void init()
 
 void cursorIncrease()
 {
-	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP)  // SELECTING BLACK PIECE 
+	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP)				// SELECTING BLACK PIECE 
 	{
 		if (pieceIndex < board.countBlacks(gameState) - 1)
 		{
@@ -92,7 +92,7 @@ void cursorIncrease()
 			board.blackCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) // SELECTING WHITE PIECE
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP)		// SELECTING WHITE PIECE
 	{
 		if (pieceIndex < board.countWhites(gameState) - 1)
 		{
@@ -100,7 +100,8 @@ void cursorIncrease()
 			board.whiteCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) // MOVING PIECE
+																			// MOVING PIECE
+	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) 
 	{
 		if (moveIndex < board.countAvailableMoves() - 1)
 		{
@@ -112,7 +113,8 @@ void cursorIncrease()
 
 void cursorDecrease()
 {
-	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP) // SELECTING BLACK PIECE
+																			// SELECTING BLACK PIECE
+	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP) 
 	{
 		if (pieceIndex > 0)
 		{
@@ -120,7 +122,8 @@ void cursorDecrease()
 			board.blackCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) // SELECTING WHITE PIECE
+																			// SELECTING WHITE PIECE
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) 
 	{
 		if (pieceIndex > 0)
 		{
@@ -128,7 +131,8 @@ void cursorDecrease()
 			board.whiteCursor(gameState, pieceIndex);
 		}
 	}
-	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) // MOVING PIECE
+																			// MOVING PIECE
+	else if (gameState == PLAYER1_MOVE || gameState == PLAYER2_MOVE || gameState == PLAYER1_JUMP_MOVE) 
 	{
 		if (moveIndex > 0)
 		{
@@ -140,42 +144,47 @@ void cursorDecrease()
 
 void changePlayerTurn()
 {
-	cameraValueX = 117939.0f;
-
 	// RESET INDEX
+	cameraValueX = 117939.0f;
 	moveIndex = 0;
 	pieceIndex = -1;
 
-	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE ||	// CHANGE TO PLAYER 1
+	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE ||			// CHANGE TO PLAYER 1
 		gameState == PLAYER2_JUMP_MOVE) 
 	{
+		if (board.promoteWhites())											// CHECK IF PIECE SHOULD BE PROMOTED
+			audio.playEffect("king");
+
 		board.clearAvailableMoves(gameState);
 
-		if (board.getBJumpPieces() > 0) // CHECK JUMPS AVAILABLE
+		if (board.getBJumpPieces() > 0)										// CHECK JUMPS AVAILABLE
 		{
 			gameState = PLAYER1_JUMP;
 			cursorIncrease();
 			rotateAnimP2 = true;
 		}
-		else // NO JUMPS
+		else																// NO JUMPS
 		{
 			gameState = PLAYER1_TURN;
 			cursorIncrease();
 			rotateAnimP2 = true;
 		}
-	}
-	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE ||  // CHANGE TO PLAYER 2
+	} 
+	else if(gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE ||		// CHANGE TO PLAYER 2
 		gameState == PLAYER1_JUMP_MOVE)						
 	{
+		if (board.promoteBlacks())											// CHECK IF PIECE SHOULD BE PROMOTED
+			audio.playEffect("king");			
+
 		board.clearAvailableMoves(gameState);
 
-		if (board.getWJumpPieces() > 0) // CHECK JUMPS AVAILABLE
+		if (board.getWJumpPieces() > 0)										// CHECK JUMPS AVAILABLE
 		{
 			gameState = PLAYER2_JUMP;
 			cursorIncrease();
 			rotateAnimP1 = true;
 		}
-		else // NO JUMPS
+		else																// NO JUMPS
 		{
 			board.clearAvailableMoves(gameState);
 			gameState = PLAYER2_TURN;
@@ -187,7 +196,7 @@ void changePlayerTurn()
 
 void select()
 {
-	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP) // SELECTING BLACK PIECE
+	if (gameState == PLAYER1_TURN || gameState == PLAYER1_JUMP)				// SELECTING BLACK PIECE
 	{
 		int index = pieceIndex;
 		if (gameState == PLAYER1_JUMP) index = board.getBJumpPieceIndex().at(pieceIndex);
@@ -195,15 +204,15 @@ void select()
 		int row = std::get<0>(board.getPieceBoardPos(*piece));
 		int column = std::get<1>(board.getPieceBoardPos(*piece));
 
-		if (gameState == PLAYER1_TURN) // NORMAL MOVE
+		if (gameState == PLAYER1_TURN)										// NORMAL MOVE
 		{
 			if (row != -1 && board.getBlackMoves(row, column) > 0)
 			{
 				gameState = PLAYER1_MOVE;
 				board.moveCursor(gameState, moveIndex);
 			}
-		}
-		else if (gameState == PLAYER1_JUMP) // JUMP MOVE
+		}	
+		else if (gameState == PLAYER1_JUMP)									// JUMP MOVE
 		{
 			if (row != -1 && board.getBJumpMoves(row, column) > 0)
 			{
@@ -212,7 +221,7 @@ void select()
 			}
 		}
 	}
-	else if (gameState == PLAYER1_MOVE ||  gameState == PLAYER1_JUMP_MOVE) // MOVE BLACK PIECE
+	else if (gameState == PLAYER1_MOVE ||  gameState == PLAYER1_JUMP_MOVE)	// MOVE BLACK PIECE
 	{
 		Piece* piece = board.getBlackPiece(pieceIndex);
 		BoardCube* destination = board.getAvailableMove(gameState, moveIndex);
@@ -233,7 +242,7 @@ void select()
 			int row = std::get<0>(board.getPieceBoardPos(*piece));
 			int column = std::get<1>(board.getPieceBoardPos(*piece));
 			
-			if (row != -1 && board.getBJumpMoves(row, column) > 0) // MORE JUMPS AVAILABLE
+			if (row != -1 && board.getBJumpMoves(row, column) > 0)			// MORE JUMPS AVAILABLE
 			{
 				gameState = PLAYER1_JUMP;
 			}
@@ -241,7 +250,7 @@ void select()
 		}
 	}
 
-	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP) // SELECTING WHITE PIECE
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_JUMP)		// SELECTING WHITE PIECE
 	{
 		int index = pieceIndex;
 		if (gameState == PLAYER2_JUMP) index = board.getWJumpPieceIndex().at(pieceIndex);
@@ -266,7 +275,7 @@ void select()
 			}
 		}
 	}
-	else if (gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP_MOVE) // MOVE WHITE PIECE
+	else if (gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP_MOVE)	 // MOVE WHITE PIECE
 	{
 		Piece* piece = board.getWhitePiece(pieceIndex);
 		BoardCube* destination = board.getAvailableMove(gameState, moveIndex);
@@ -287,7 +296,7 @@ void select()
 			int row = std::get<0>(board.getPieceBoardPos(*piece));
 			int column = std::get<1>(board.getPieceBoardPos(*piece));
 
-			if (row != -1 && board.getWJumpMoves(row, column) > 0) // MORE JUMPS AVAILABLE
+			if (row != -1 && board.getWJumpMoves(row, column) > 0)			// MORE JUMPS AVAILABLE
 			{
 				gameState = PLAYER2_JUMP;
 			}
@@ -298,7 +307,7 @@ void select()
 
 void deselect()
 {
-	if (gameState == PLAYER1_MOVE || gameState == PLAYER1_JUMP_MOVE) // RETURN TO SELECT P1 PIECE
+	if (gameState == PLAYER1_MOVE || gameState == PLAYER1_JUMP_MOVE)		// RETURN TO SELECT P1 PIECE
 	{
 		moveIndex = 0;
 		board.clearAvailableMoves(gameState);
@@ -308,7 +317,7 @@ void deselect()
 
 		board.blackCursor(gameState, pieceIndex);
 	}
-	else if (gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP_MOVE) // RETURN TO SELECT P2 PIECE
+	else if (gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP_MOVE)	// RETURN TO SELECT P2 PIECE
 	{ 
 		moveIndex = 0;
 		board.clearAvailableMoves(gameState);
@@ -360,6 +369,11 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 
 void renderDebug()
 {
+	// APERTE ENTER
+	std::string menuText = "APERTE ENTER PARA INICIAR";
+	if(gameState == MENU_STATE)
+		renderText(0, 700, GLUT_BITMAP_TIMES_ROMAN_24, menuText.c_str(), 255.0f, 255.0f, 255.0f);
+
 	// GAMESTATE
 	std::string gameStateText = "GameState: " + std::to_string(gameState);
 	renderText(600, 700, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 255.0f, 255.0f, 255.0f);

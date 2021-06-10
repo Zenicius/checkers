@@ -18,7 +18,6 @@ class Entity
 		float x, y, z;
 		float red, green, blue;
 		double size;
-		bool jump;
 	public:
 		Entity();
 		Entity(float x, float y, float z, float red, float green, float blue, double size);
