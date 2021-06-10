@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+ThirdParty/
+
 # Visual Studio Project files
 *.vcxproj
 *.vcxproj.filters
@@ -14,6 +16,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.sln
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
