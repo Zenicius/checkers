@@ -46,8 +46,8 @@ class Board
 		int countBlacks(int gameState);
 		bool hasBlackPiece(int row, int column);
 		bool isValidBlackJump(int srcRow, int srcColumn, int destRow, int destColumn);
-		int getBlackMoves(int row, int column);
-		int getBJumpMoves(int row, int column);
+		int getBlackMoves(int row, int column, bool isKing);
+		int getBJumpMoves(int row, int column, bool isKing);
 		std::vector<int> getBJumpPieceIndex();
 		int getBJumpPieces();
 
@@ -56,8 +56,8 @@ class Board
 		int countWhites(int gameState);
 		bool hasWhitePiece(int row, int column);
 		bool isValidWhiteJump(int srcRow, int srcColumn, int destRow, int destColumn);
-		int getWhiteMoves(int row, int column);
-		int getWJumpMoves(int row, int column);
+		int getWhiteMoves(int row, int column, bool isKing);
+		int getWJumpMoves(int row, int column, bool isKing);
 		std::vector<int> getWJumpPieceIndex();
 		int getWJumpPieces();
 
