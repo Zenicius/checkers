@@ -121,6 +121,14 @@ void Board::moveCursor(int gameState, int index)
 	}
 }
 
+int Board::countRemainingPieces()
+{
+	if (wPieces.size() == 0) return PLAYER1_WON;
+	else if (bPieces.size() == 0) return PLAYER2_WON;
+	
+	return -1;
+}
+
 int Board::countAvailableMoves()
 {
 	return availableMoves.size();
@@ -816,7 +824,7 @@ void Board::tick(float t)
 }
 
 void Board::render()
-{
+{       
 	// 8x8 BOARD CUBES
 	for (auto& rows : boardCubes)
 	{

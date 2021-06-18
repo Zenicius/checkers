@@ -5,11 +5,13 @@ Audio::Audio()
 	this->Music = createIrrKlangDevice();
 	this->Effects = createIrrKlangDevice();
 	
-	muted = false;
+	muted = true;
 	volume = 0.2f;
 
-	Music->setSoundVolume(volume);
-	Music->play2D("../Res/music.mp3", true);
+	if(!muted) Music->setSoundVolume(volume);
+	else Music->setSoundVolume(0.0f);
+
+	Music->play2D("../Res/music.flac", true);
 }
 
 void Audio::playEffect(std::string effect)

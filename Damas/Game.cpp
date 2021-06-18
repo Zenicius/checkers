@@ -18,6 +18,7 @@
 #include "Entity.h"
 #include "Board.h"
 #include "Piece.h"
+#include "Level.h"
 
 // GAME STATES
 #define MENU_STATE 0
@@ -43,6 +44,7 @@ bool fullScreen = false;
 // GAME
 int gameState = MENU_STATE;
 
+Level level;
 Board board;
 int pieceIndex = -1;
 int moveIndex = 0;
@@ -65,9 +67,15 @@ bool cameraMove = false;
 bool rotateAnimP1 = false;
 bool rotateAnimP2 = false;
 float rotateAngle = 0.0f;
-float cameraValueX = 117939.0f; // CENTER 
+float cameraValueX = 105234.0f; // CENTER 
 float cameraValueY = 0.0f;
-float zoomValue = 15.0f;
+float zoomValue = 35.0f;
+
+/*
+*
+* INIT
+*
+*/
 
 void init()
 {
@@ -81,6 +89,15 @@ void init()
 * GAME
 *
 */
+
+void checkGameOver()
+{
+	if (board.countRemainingPieces() != -1)
+	{
+		gameState = board.countRemainingPieces();
+		audio.playEffect("victory");
+	}
+}
 
 void cursorIncrease()
 {
@@ -143,6 +160,8 @@ void changePlayerTurn()
 	cameraValueX = 117939.0f;
 	moveIndex = 0;
 	pieceIndex = -1;
+
+	checkGameOver();
 
 	if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE ||			
 		gameState == PLAYER2_JUMP_MOVE) 
@@ -327,9 +346,23 @@ void startGame()
 {
 	if (gameState == MENU_STATE)
 	{
+		cameraValueX = 117939.0f;
+		zoomValue = 15.0;
 		gameState = PLAYER1_TURN;
 		cursorIncrease();
 	}
+}
+
+void restart()
+{
+	cameraValueX = 117939.0f;
+	moveIndex = 0;
+	pieceIndex = -1;
+
+	Board newBoard;
+	board = newBoard;
+
+	gameState = MENU_STATE;
 }
 
 /*
@@ -363,11 +396,6 @@ void renderText(float x, float y, void* font, const char* string, float red, flo
 
 void renderDebug()
 {
-	// APERTE ENTER
-	std::string menuText = "APERTE ENTER PARA INICIAR";
-	if(gameState == MENU_STATE)
-		renderText(0, 700, GLUT_BITMAP_TIMES_ROMAN_24, menuText.c_str(), 255.0f, 255.0f, 255.0f);
-
 	// GAMESTATE
 	std::string gameStateText = "GameState: " + std::to_string(gameState);
 	renderText(600, 700, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 255.0f, 255.0f, 255.0f);
@@ -418,6 +446,26 @@ void renderDebug()
 	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText.c_str(), 255.0f, 255.0f, 255.0f);
 }
 
+void renderMenu()
+{
+	// PRESS ENTER TO START
+	std::string menuText = "APERTE ENTER PARA INICIAR";
+	if (gameState == MENU_STATE)
+		renderText(0, 700, GLUT_BITMAP_TIMES_ROMAN_24, menuText.c_str(), 255.0f, 255.0f, 255.0f);
+
+	// RESTART GAME
+	if (gameState == PLAYER1_WON || gameState == PLAYER2_WON)
+	{
+		std::string playerWonText;
+		if (gameState == PLAYER1_WON) playerWonText = "JOGADOR 1 VENCEU";
+		else playerWonText = "JOGADOR 2 VENCEU";
+		renderText(0, 700, GLUT_BITMAP_TIMES_ROMAN_24, playerWonText.c_str(), 255.0f, 255.0f, 255.0f);
+
+		std::string restartText = "APERTE ENTER PARA JOGAR NOVAMENTE";
+		renderText(0, 650, GLUT_BITMAP_TIMES_ROMAN_24, restartText.c_str(), 255.0f, 255.0f, 255.0f);
+	}
+}
+
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -431,12 +479,18 @@ void render()
 
 	// DEBUG INFO
 	if (showDebug) renderDebug();
+	
+	// MENU
+	renderMenu();
 
 	// BOARD
 	glRotatef(rotateAngle, 0.0f, 1.0f, 0.0f);
 	glTranslatef(-5.5, 0.0, -5);
 	board.render();
 	
+	// LEVEL
+	level.render();
+
 	glutSwapBuffers();
 }
 
@@ -484,7 +538,8 @@ void keyboardInput(unsigned char key, int x, int y)
 		break;
 	case 13:
 		lastKeyPressed = "ENTER";
-		startGame();
+		if (gameState == PLAYER1_WON || gameState == PLAYER2_WON) restart();
+		else startGame();
 		break;
 	case 8:
 		lastKeyPressed = "BACKSPACE";
@@ -614,7 +669,7 @@ void tick(int value)
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(width, height);
 	glutCreateWindow(title.c_str());

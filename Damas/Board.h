@@ -32,6 +32,7 @@ class Board
 		void initBoard();
 
 		void moveCursor(int gameState, int index);
+		int countRemainingPieces();
 		int countAvailableMoves();
 		void clearAvailbleJumps();
 		void clearAvailableMoves(int gameState);
