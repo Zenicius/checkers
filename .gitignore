@@ -9,6 +9,8 @@ ThirdParty/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+*.rc
+resource.h
 
 # User-specific files
 *.rsuser
