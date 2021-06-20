@@ -36,7 +36,7 @@
 #define PLAYER2_WON 22222
 
 // WINDOW
-std::string title = "Damas";
+std::string title = "Damas - Zenicius";
 int width = 1366;
 int height = 728;
 bool fullScreen = false;
@@ -53,7 +53,7 @@ int moveIndex = 0;
 Audio audio;
 
 // DEBUG
-bool showDebug = true;
+bool showDebug = false;
 std::string lastKeyPressed = "None";
 
 // INPUT
@@ -67,7 +67,7 @@ bool cameraMove = false;
 bool rotateAnimP1 = false;
 bool rotateAnimP2 = false;
 float rotateAngle = 0.0f;
-float cameraValueX = 105234.0f; // CENTER 
+float cameraValueX = 105234.0f; 
 float cameraValueY = 0.0f;
 float zoomValue = 35.0f;
 
@@ -77,9 +77,45 @@ float zoomValue = 35.0f;
 *
 */
 
+void initLightning(void)
+{
+	GLfloat ambient[4] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat difuse[4] = { 1.0, 1.0, 1.0, 1.0 };	  
+	GLfloat specular[4] = { 0.7, 0.7, 0.7, 1.0 };
+	GLfloat pos[4] = { -5.0, -50.0, -10.0, 1.0 };
+	GLfloat pos1[4] = { -5.0, -50.0, 10.0, 1.0 };
+
+	GLfloat especularidade[4] = { 0.5, 0.5, 0.5, 1.0 };
+	GLint especMaterial = 100;
+
+	glMaterialfv(GL_FRONT, GL_SPECULAR, especularidade);
+	glMateriali(GL_FRONT, GL_SHININESS, especMaterial);
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
+
+	// LIGHT 0
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, difuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, pos);
+
+	// LIGHT 1
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, difuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT1, GL_POSITION, pos1);
+}
+
+
 void init()
 {
 	glEnable(GL_DEPTH_TEST);
+	glShadeModel(GL_SMOOTH);
+
+	initLightning();
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
+
 	glEnable(GL_COLOR_MATERIAL);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
@@ -398,70 +434,101 @@ void renderDebug()
 {
 	// GAMESTATE
 	std::string gameStateText = "GameState: " + std::to_string(gameState);
-	renderText(600, 700, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(625, 40, GLUT_BITMAP_TIMES_ROMAN_24, gameStateText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// LAST KEY PRESSED
-	renderText(1150, 15, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(1150, 15, GLUT_BITMAP_TIMES_ROMAN_24, lastKeyPressed.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// AUDIO VOLUME
 	std::string volumeText = "Volume: " + std::to_string(audio.getVolume());
-	renderText(0, 180, GLUT_BITMAP_TIMES_ROMAN_24, volumeText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 180, GLUT_BITMAP_TIMES_ROMAN_24, volumeText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// COUNT BLACKS
 	std::string cBlacksText = "B: " + std::to_string(board.countBlacks(gameState));
-	renderText(600, 0, GLUT_BITMAP_TIMES_ROMAN_24, cBlacksText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(600, 0, GLUT_BITMAP_TIMES_ROMAN_24, cBlacksText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// COUNT BLACKS
 	std::string cWhitesText = "W: " + std::to_string(board.countWhites(gameState));
-	renderText(700, 0, GLUT_BITMAP_TIMES_ROMAN_24, cWhitesText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(700, 0, GLUT_BITMAP_TIMES_ROMAN_24, cWhitesText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// MANDATORY JUMP
 	std::string mandatoryText = "Mandatory Jump";
 	if (gameState == PLAYER1_JUMP || gameState == PLAYER1_JUMP_MOVE
 		|| gameState == PLAYER2_JUMP || gameState == PLAYER2_JUMP_MOVE) 
-			renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 255.0f, 255.0f, 255.0f);
+			renderText(1150, 70, GLUT_BITMAP_TIMES_ROMAN_24, mandatoryText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// MOUSE POS X INFO
 	std::string mouseXText = "Mouse Pos X: " + std::to_string(mouseX);
-	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 150, GLUT_BITMAP_TIMES_ROMAN_24, mouseXText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// MOUSE POS X INFO
 	std::string mouseYText = "Mouse Pos Y: " + std::to_string(mouseY);
-	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 120, GLUT_BITMAP_TIMES_ROMAN_24, mouseYText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// ROTATE ANGLE
 	std::string rotateAngleText = "Rotate: " + std::to_string(rotateAngle);
-	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, rotateAngleText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 90, GLUT_BITMAP_TIMES_ROMAN_24, rotateAngleText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// CAMERA VALUE X INFO
 	std::string cameraValueText = "Camera Value X: " + std::to_string(cameraValueX);
-	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 60, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// CAMERA VALUE Y INFO
 	std::string cameraValueYText = "Camera Value Y: " + std::to_string(cameraValueY);
-	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 30, GLUT_BITMAP_TIMES_ROMAN_24, cameraValueYText.c_str(), 255.0f, 0.0f, 0.0f);
 
 	// ZOOM VALUE INFO
 	std::string zoomValueText = "Zoom Value " + std::to_string(zoomValue);
-	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText.c_str(), 255.0f, 255.0f, 255.0f);
+	renderText(0, 0, GLUT_BITMAP_TIMES_ROMAN_24, zoomValueText.c_str(), 255.0f, 0.0f, 0.0f);
 }
 
 void renderMenu()
 {
 	// PRESS ENTER TO START
-	std::string menuText = "APERTE ENTER PARA INICIAR";
 	if (gameState == MENU_STATE)
-		renderText(0, 700, GLUT_BITMAP_TIMES_ROMAN_24, menuText.c_str(), 255.0f, 255.0f, 255.0f);
+	{
+		std::string titleText = "DAMAS";
+		renderText(620, 700, GLUT_BITMAP_TIMES_ROMAN_24, titleText.c_str(), 255.0f, 255.0f, 255.0f);
+
+		std::string starText = "Aperte ENTER para iniciar!";
+		renderText(550, 670, GLUT_BITMAP_TIMES_ROMAN_24, starText.c_str(), 255.0f, 255.0f, 255.0f);
+
+		std::string controlsText = "Controles:";
+		renderText(1100, 700, GLUT_BITMAP_TIMES_ROMAN_24, controlsText.c_str(), 255.0f, 255.0f, 255.0f);
+		renderText(1100, 675, GLUT_BITMAP_TIMES_ROMAN_24, "A/D: Selecionar", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 650, GLUT_BITMAP_TIMES_ROMAN_24, "SPACE: Confirmar", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 625, GLUT_BITMAP_TIMES_ROMAN_24, "MOUSE ESQ: Camera", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 600, GLUT_BITMAP_TIMES_ROMAN_24, "MOUSE DIR: Zoom", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 575, GLUT_BITMAP_TIMES_ROMAN_24, "MOUSE MEIO: Reset", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 550, GLUT_BITMAP_TIMES_ROMAN_24, "F: Fullscreen", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 525, GLUT_BITMAP_TIMES_ROMAN_24, "M: Mutar Musica", 255.0f, 255.0f, 255.0f);
+		renderText(1100, 500, GLUT_BITMAP_TIMES_ROMAN_24, "+ / -: Volume", 255.0f, 255.0f, 255.0f);
+	}
+	else if (gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE || gameState ==  PLAYER1_JUMP || gameState == PLAYER1_JUMP_MOVE)
+	{
+		std::string text;
+		if (gameState == PLAYER1_TURN || gameState == PLAYER1_MOVE) text = "Turno JOGADOR 1";
+		else text = "Captura JOGADOR 1";
+		renderText(620, 700, GLUT_BITMAP_TIMES_ROMAN_24, text.c_str(), 255.0f, 255.0f, 255.0f);
+	}
+	else if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE || gameState == PLAYER2_JUMP || gameState == PLAYER2_JUMP_MOVE)
+	{
+		std::string text;
+		if (gameState == PLAYER2_TURN || gameState == PLAYER2_MOVE) text = "Turno JOGADOR 2";
+		else text = "Captura JOGADOR 2";
+		renderText(620, 700, GLUT_BITMAP_TIMES_ROMAN_24, text.c_str(), 255.0f, 255.0f, 255.0f);
+	}
+	
 
 	// RESTART GAME
 	if (gameState == PLAYER1_WON || gameState == PLAYER2_WON)
 	{
 		std::string playerWonText;
-		if (gameState == PLAYER1_WON) playerWonText = "JOGADOR 1 VENCEU";
-		else playerWonText = "JOGADOR 2 VENCEU";
+		if (gameState == PLAYER1_WON) playerWonText = "JOGADOR 1 Venceu";
+		else playerWonText = "JOGADOR 2 Venceu";
 		renderText(0, 700, GLUT_BITMAP_TIMES_ROMAN_24, playerWonText.c_str(), 255.0f, 255.0f, 255.0f);
 
-		std::string restartText = "APERTE ENTER PARA JOGAR NOVAMENTE";
+		std::string restartText = "Aperte ENTER para jogar novamente!";
 		renderText(0, 650, GLUT_BITMAP_TIMES_ROMAN_24, restartText.c_str(), 255.0f, 255.0f, 255.0f);
 	}
 }
@@ -487,7 +554,7 @@ void render()
 	glRotatef(rotateAngle, 0.0f, 1.0f, 0.0f);
 	glTranslatef(-5.5, 0.0, -5);
 	board.render();
-	
+
 	// LEVEL
 	level.render();
 

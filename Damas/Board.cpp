@@ -254,8 +254,6 @@ bool Board::promoteBlacks()
 		if (row == 0 && !piece.isKing())
 		{
 			piece.setKing(true);
-			piece.setSize(0.70);
-
 			return true;
 		}
 	}
@@ -512,8 +510,6 @@ bool Board::promoteWhites()
 		if (row == 7 && !piece.isKing())
 		{
 			piece.setKing(true);
-			piece.setSize(0.70);
-
 			return true;
 		}
 	}

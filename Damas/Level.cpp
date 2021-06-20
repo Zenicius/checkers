@@ -1,60 +1,43 @@
 #include "Level.h"
 
-Level::Level()
-{
-}
-
-void Level::renderFloor()
-{
-	glPushMatrix();
-	glTranslatef(-100, -33, -100);
-	glBegin(GL_QUADS);
-		glColor3f(1.28, 1.28f, 1.28f);     // WHITE
-		glVertex3f(0.0f, 0.0f, 0.0f);
-		glVertex3f(0.0f, 0.0f, 300.0f);
-		glVertex3f(300.0f, 0.0f, 300.0f);
-		glVertex3f(300.0f, 0.0f, 0.0f);
-	glEnd();
-	glPopMatrix();
-}
-
 void Level::renderTable(float x, float y, float z)
 {
 	glPushMatrix();
+
 	glTranslatef(x, y, z);
 	glBegin(GL_QUADS);
 
-		glColor3f(0.0f, 1.0f, 0.0f);     // Green
+		glColor3f(0.15f, 0.075f, 0.0f);    
 		glVertex3f(20.0f, 1.0f, -30.0f);
 		glVertex3f(-20.0f, 1.0f, -30.0f);
 		glVertex3f(-20.0f, 1.0f, 20.0f);
 		glVertex3f(20.0f, 1.0f, 20.0f);
 
-		glColor3f(1.0f, 0.5f, 0.0f);     // Orange
+		glColor3f(0.15f, 0.075f, 0.0f);       
 		glVertex3f(20.0f, -1.0f, 20.0f);
 		glVertex3f(-20.0f, -1.0f, 20.0f);
 		glVertex3f(-20.0f, -1.0f, -30.0f);
 		glVertex3f(20.0f, -1.0f, -30.0f);
 
-		glColor3f(1.0f, 0.0f, 0.0f);     // Red
+		glColor3f(0.15f, 0.075f, 0.0f);      
 		glVertex3f(20.0f, 1.0f, 20.0f);
 		glVertex3f(-20.0f, 1.0f, 20.0f);
 		glVertex3f(-20.0f, -1.0f, 20.0f);
 		glVertex3f(20.0f, -1.0f, 20.0f);
 
-		glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
+		glColor3f(0.15f, 0.075f, 0.0f);       
 		glVertex3f(20.0f, -1.0f, -30.0f);
 		glVertex3f(-20.0f, -1.0f, -30.0f);
 		glVertex3f(-20.0f, 1.0f, -30.0f);
 		glVertex3f(20.0f, 1.0f, -30.0f);
 
-		glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+		glColor3f(0.15f, 0.075f, 0.0f);      
 		glVertex3f(-20.0f, 1.0f, 20.0f);
 		glVertex3f(-20.0f, 1.0f, -30.0f);
 		glVertex3f(-20.0f, -1.0f, -30.0f);
 		glVertex3f(-20.0f, -1.0f, 20.0f);
 
-		glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
+		glColor3f(0.15f, 0.075f, 0.0f);      
 		glVertex3f(20.0f, 1.0f, -30.0f);
 		glVertex3f(20.0f, 1.0f, 20.0f);
 		glVertex3f(20.0f, -1.0f, 20.0f);
@@ -70,37 +53,37 @@ void Level::renderLeg(float x, float y, float z)
 	glTranslatef(x, y, z);
 	glBegin(GL_QUADS);
 
-		glColor3f(0.0f, 1.0f, 0.0f);     // Green
+		glColor3f(0.20f, 0.090f, 0.0f);      
 		glVertex3f(1.0f, 1.0f, -1.0f);
 		glVertex3f(-1.0f, 1.0f, -1.0f);
 		glVertex3f(-1.0f, 1.0f, 1.0f);
 		glVertex3f(1.0f, 1.0f, 1.0f);
 
-		glColor3f(1.0f, 0.5f, 0.0f);     // Orange
+		glColor3f(0.20f, 0.090f, 0.0f);
 		glVertex3f(1.0f, -1.0f, 1.0f);
 		glVertex3f(-1.0f, -1.0f, 1.0f);
 		glVertex3f(-1.0f, -1.0f, -1.0f);
 		glVertex3f(1.0f, -1.0f, -1.0f);
 
-		glColor3f(1.0f, 0.0f, 0.0f);     // Red
+		glColor3f(0.20f, 0.090f, 0.0f);
 		glVertex3f(1.0f, 1.0f, 1.0f);
 		glVertex3f(-1.0f, 1.0f, 1.0f);
 		glVertex3f(-1.0f, -30.0f, 1.0f);
 		glVertex3f(1.0f, -30.0f, 1.0f);
 
-		glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
+		glColor3f(0.20f, 0.090f, 0.0f);
 		glVertex3f(1.0f, -30.0f, -1.0f);
 		glVertex3f(-1.0f, -30.0f, -1.0f);
 		glVertex3f(-1.0f, 1.0f, -1.0f);
 		glVertex3f(1.0f, 1.0f, -1.0f);
 
-		glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+		glColor3f(0.20f, 0.090f, 0.0f);
 		glVertex3f(-1.0f, 1.0f, 1.0f);
 		glVertex3f(-1.0f, 1.0f, -1.0f);
 		glVertex3f(-1.0f, -30.0f, -1.0f);
 		glVertex3f(-1.0f, -30.0f, 1.0f);
 
-		glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
+		glColor3f(0.20f, 0.090f, 0.0f);
 		glVertex3f(1.0f, 1.0f, -1.0f);
 		glVertex3f(1.0f, 1.0f, 1.0f);
 		glVertex3f(1.0f, -30.0f, 1.0f);
@@ -110,13 +93,8 @@ void Level::renderLeg(float x, float y, float z)
 	glPopMatrix();
 }
 
-
-
 void Level::render()
 {
-	// FLOOR
-	renderFloor();
-
 	// TABLE TOP
 	renderTable(3.5f, -2.0f, 3.0f);
 

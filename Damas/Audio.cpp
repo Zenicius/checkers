@@ -11,12 +11,12 @@ Audio::Audio()
 	if(!muted) Music->setSoundVolume(volume);
 	else Music->setSoundVolume(0.0f);
 
-	Music->play2D("../Res/music.flac", true);
+	Music->play2D("Res/music.flac", true);
 }
 
 void Audio::playEffect(std::string effect)
 {
-	std::string path = "../Res/" + effect + ".wav";
+	std::string path = "Res/" + effect + ".wav";
 	Effects->setSoundVolume(volume);
 	Effects->play2D(path.c_str(), false);
 }

@@ -60,24 +60,71 @@ Pos Piece::getFinalPos()
 
 void Piece::render()
 {	
-	glPushMatrix();
-	glTranslatef(x, y, z);
-	glRotated(90, -1, 0, 0);
-	glColor3f(red, green, blue);
-	gluDisk(this->QUAD, 0, size, 64, 64);
-	glPopMatrix();
+	if (king)
+	{
+		glPushMatrix();
+		glTranslatef(x, y, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluDisk(this->QUAD, 0, size, 64, 64);
+		glPopMatrix();
 
-	glPushMatrix();
-	glTranslatef(x, y, z);
-	glRotated(90, -1, 0, 0);
-	glColor3f(red, green, blue);
-	gluCylinder(this->QUAD, size, size, size / 2, 64, 64);
-	glPopMatrix();
+		glPushMatrix();
+		glTranslatef(x, y, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluCylinder(this->QUAD, size, size, size / 2, 64, 64);
+		glPopMatrix();
 
-	glPushMatrix();
-	glTranslatef(x , y + 0.25, z);
-	glRotated(90, -1, 0, 0);
-	glColor3f(red, green, blue);
-	gluDisk(this->QUAD, 0, size, 64, 64);
-	glPopMatrix();
+		glPushMatrix();
+		glTranslatef(x, y + 0.25, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluDisk(this->QUAD, 0, size, 64, 64);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(x, y + 0.26, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluDisk(this->QUAD, 0, size, 64, 64);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(x, y + 0.26, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluCylinder(this->QUAD, size, size, size / 2, 64, 64);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(x, y + 0.51, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluDisk(this->QUAD, 0, size, 64, 64);
+		glPopMatrix();
+	}
+	else 
+	{
+		glPushMatrix();
+		glTranslatef(x, y, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluDisk(this->QUAD, 0, size, 64, 64);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(x, y, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluCylinder(this->QUAD, size, size, size / 2, 64, 64);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(x, y + 0.25, z);
+		glRotated(90, -1, 0, 0);
+		glColor3f(red, green, blue);
+		gluDisk(this->QUAD, 0, size, 64, 64);
+		glPopMatrix();
+	}
 }
